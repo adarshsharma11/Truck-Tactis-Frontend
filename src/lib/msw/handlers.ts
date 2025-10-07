@@ -84,6 +84,18 @@ export const handlers = [
     return HttpResponse.json(trucks);
   }),
 
+  http.post('/mock/trucks', async ({ request }) => {
+    const newTruck = await request.json() as Partial<Truck>;
+    const truck: Truck = {
+      id: `truck-${Date.now()}`,
+      status: 'idle',
+      ...newTruck,
+    } as Truck;
+    
+    trucks.push(truck);
+    return HttpResponse.json(truck, { status: 201 });
+  }),
+
   http.patch('/mock/trucks/:id', async ({ params, request }) => {
     const { id } = params;
     const updates = await request.json() as Partial<Truck>;
