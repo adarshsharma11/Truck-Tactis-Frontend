@@ -1,0 +1,128 @@
+[
+  {
+    "id": "folder-rebar",
+    "name": "Rebar",
+    "is_folder": true,
+    "children": [
+      {
+        "id": "folder-rebar-size",
+        "name": "Size",
+        "is_folder": true,
+        "parent_id": "folder-rebar",
+        "children": [
+          {
+            "id": "folder-rebar-3",
+            "name": "#3 (3/8\")",
+            "is_folder": true,
+            "parent_id": "folder-rebar-size",
+            "children": [
+              {
+                "id": "item-rebar-1",
+                "name": "Grade 60 #3 Rebar 20ft",
+                "sku": "RB-60-3-20",
+                "size": "#3 (3/8\")",
+                "weight": 0.376,
+                "dimensions": {
+                  "length": 240,
+                  "width": 0.375,
+                  "height": 0.375
+                },
+                "notes": "Standard grade 60",
+                "tags": ["steel", "rebar", "grade60"],
+                "is_folder": false,
+                "parent_id": "folder-rebar-3",
+                "is_favorited": true
+              }
+            ]
+          },
+          {
+            "id": "folder-rebar-4",
+            "name": "#4 (1/2\")",
+            "is_folder": true,
+            "parent_id": "folder-rebar-size",
+            "children": [
+              {
+                "id": "item-rebar-2",
+                "name": "Grade 60 #4 Rebar 20ft",
+                "sku": "RB-60-4-20",
+                "size": "#4 (1/2\")",
+                "weight": 0.668,
+                "dimensions": {
+                  "length": 240,
+                  "width": 0.5,
+                  "height": 0.5
+                },
+                "notes": "High strength",
+                "tags": ["steel", "rebar", "grade60"],
+                "is_folder": false,
+                "parent_id": "folder-rebar-4",
+                "is_favorited": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "folder-steel",
+    "name": "Structural Steel",
+    "is_folder": true,
+    "children": [
+      {
+        "id": "item-steel-1",
+        "name": "W12x26 Wide Flange Beam",
+        "sku": "WF-12-26",
+        "size": "12\" x 6.5\"",
+        "weight": 26,
+        "dimensions": {
+          "length": 240,
+          "width": 6.5,
+          "height": 12
+        },
+        "notes": "Standard structural beam",
+        "tags": ["steel", "beam", "structural"],
+        "is_folder": false,
+        "parent_id": "folder-steel"
+      },
+      {
+        "id": "item-steel-2",
+        "name": "L4x4x1/4 Angle Iron",
+        "sku": "ANG-4-4-025",
+        "size": "4\" x 4\"",
+        "weight": 6.6,
+        "dimensions": {
+          "length": 240,
+          "width": 4,
+          "height": 4
+        },
+        "tags": ["steel", "angle", "structural"],
+        "is_folder": false,
+        "parent_id": "folder-steel"
+      }
+    ]
+  },
+  {
+    "id": "folder-concrete",
+    "name": "Concrete Products",
+    "is_folder": true,
+    "children": [
+      {
+        "id": "item-concrete-1",
+        "name": "8x8x16 CMU Block",
+        "sku": "CMU-8-8-16",
+        "size": "8\" x 8\" x 16\"",
+        "weight": 38,
+        "dimensions": {
+          "length": 16,
+          "width": 8,
+          "height": 8
+        },
+        "notes": "Standard concrete masonry unit",
+        "tags": ["concrete", "block", "cmu"],
+        "is_folder": false,
+        "parent_id": "folder-concrete"
+      }
+    ]
+  }
+]

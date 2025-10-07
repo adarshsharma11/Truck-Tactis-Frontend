@@ -1,73 +1,212 @@
-# Welcome to your Lovable project
+# Truck Optimize – Frontend v2
 
-## Project info
+A modern, dark-themed logistics command center for truck routing, inventory management, and midday operations. Built with React, TypeScript, Vite, and twin.macro.
 
-**URL**: https://lovable.dev/projects/03c74c25-49ba-4a2b-81f2-8a52c0419257
+## Features
 
-## How can I edit this code?
+### 🗓️ Day Planner
+- Interactive Google Maps with job pins
+- Drag-and-drop job reordering
+- CSV import for bulk job creation
+- Job form with validation (location, items, priority, time windows)
+- Overtime defer modal (feature-flagged)
+- Export to CSV/PDF
 
-There are several ways of editing your application.
+### 📦 Inventory & Fleet
+- Tree-view inventory with nested folders
+- Drag-and-drop for organizing items
+- Star/favorite items for quick access
+- Fleet management with truck status tracking
+- CRUD operations for items and trucks
 
-**Use Lovable**
+### 🚛 Midday Operations
+- 3-stop cadence visualization per truck
+- "Mark 3 Complete" action
+- "Send Next 3" WhatsApp stub (feature-flagged)
+- Curfew warnings
+- Real-time truck status monitoring
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/03c74c25-49ba-4a2b-81f2-8a52c0419257) and start prompting.
+### 📊 Dashboards
+- Key metrics (jobs completed, on-time %, avg times)
+- Utilization by truck (bar chart)
+- Jobs completed vs deferred trend (line chart)
+- Location heatmap overlay (feature-flagged)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- **Framework**: React 18 + Vite + TypeScript
+- **Styling**: TailwindCSS (dark-only) + twin.macro + Emotion
+- **State**: Zustand + TanStack Query
+- **Forms**: react-hook-form + zod
+- **Maps**: Google Maps JS API
+- **Charts**: Recharts
+- **Mocking**: MSW (Mock Service Worker)
+- **UI Components**: Custom shadcn/ui components
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+- Node.js 18+ and npm
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Copy environment variables
+cp .env.example .env
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Edit .env with your Google Maps API key
+# VITE_GOOGLE_MAPS_API_KEY=your_actual_key_here
 ```
 
-**Edit a file directly in GitHub**
+### Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Start dev server with MSW mocking
+npm run dev
 
-**Use GitHub Codespaces**
+# App will be available at http://localhost:8080
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The app will automatically load seed data from `src/lib/msw/seeds/` and use MSW to mock all API calls.
 
-## What technologies are used for this project?
+### Building for Production
 
-This project is built with:
+```bash
+# Type check and build
+npm run build
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Preview production build
+npm run preview
+```
 
-## How can I deploy this project?
+## Project Structure
 
-Simply open [Lovable](https://lovable.dev/projects/03c74c25-49ba-4a2b-81f2-8a52c0419257) and click on Share -> Publish.
+```
+src/
+├── app/                  # (Reserved for future use)
+├── components/           # Shared UI components
+│   ├── ui/              # shadcn/ui components
+│   ├── Layout.tsx       # Main layout with tabs
+│   └── DatePicker.tsx   # Top-right date selector
+├── features/            # (Reserved for feature-specific components)
+├── lib/
+│   ├── api/            # API client and TanStack Query hooks
+│   ├── msw/            # MSW handlers and seed data
+│   └── store/          # Zustand stores
+├── pages/              # Route pages (Plan, Inventory, Ops, Dash)
+├── types/              # TypeScript types
+├── config/             # Environment and feature flags
+└── styles/             # twin.macro setup
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Environment Variables
 
-Yes, you can!
+Create a `.env` file based on `.env.example`:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```env
+VITE_API_BASE_URL=http://localhost:5173/mock
+VITE_GOOGLE_MAPS_API_KEY=your_key_here
+VITE_WEBHOOK_NEXT3_URL=https://example.com/whatsapp-stub
+VITE_FEATURE_FLAGS={"overtimeModal":true,"whatsappStub":true,"heatmap":true}
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Feature Flags
+- `overtimeModal`: Show/hide overtime defer modal
+- `whatsappStub`: Enable "Send Next 3" webhook button
+- `heatmap`: Show location heatmap on dashboard
+
+## Switching from MSW to Real Backend
+
+The API layer is designed for easy backend swapping:
+
+1. **Update `.env`**: Change `VITE_API_BASE_URL` to your real API endpoint
+   ```env
+   VITE_API_BASE_URL=https://api.yourbackend.com
+   ```
+
+2. **API endpoints** are defined in `src/lib/api/hooks.ts`:
+   - `GET /jobs?date=YYYY-MM-DD`
+   - `POST /jobs`
+   - `PATCH /jobs/:id`
+   - `DELETE /jobs/:id`
+   - `POST /jobs/:id/defer`
+   - `GET /trucks`
+   - `PATCH /trucks/:id`
+   - `GET /inventory`
+   - `POST /inventory`
+   - `PATCH /inventory/:id`
+   - `DELETE /inventory/:id`
+   - `POST /ops/mark-3-complete`
+   - `POST /ops/send-next-3`
+   - `GET /metrics/summary?from=&to=`
+
+3. **Types** are centralized in `src/types/index.ts` for easy backend alignment
+
+4. **Query keys** are in `src/lib/api/hooks.ts` for cache invalidation
+
+## Dark-Only Theme
+
+The app uses a dark logistics theme with:
+- Deep slate/navy backgrounds
+- Electric blue accents for actions
+- Amber warnings for curfews/overtime
+- Green for success states
+- Cyan for active/in-progress states
+
+Colors are defined in `src/index.css` and `tailwind.config.ts` using HSL values with CSS variables.
+
+## Data Flow
+
+1. **Date Selection**: Top-right date picker updates Zustand store (`useDateStore`)
+2. **API Calls**: TanStack Query hooks fetch data based on selected date
+3. **MSW Interception**: In development, MSW intercepts requests and returns seed data
+4. **Optimistic Updates**: Mutations use optimistic updates with automatic rollback on error
+5. **Toast Notifications**: Success/error feedback via Sonner
+
+## CSV Import Format
+
+For bulk job import, use this CSV structure:
+
+```csv
+location_name,address,action,items,priority,earliest,latest,service_minutes_override,notes
+Downtown Depot,123 Main St,pickup,"item-1,item-2",1,08:00,10:00,30,Use dock B
+```
+
+## Testing Strategy
+
+- **Unit tests**: Vitest for critical components (JobForm, drag-and-drop)
+- **Integration tests**: MSW-based API hook testing
+- **E2E tests**: Playwright smoke tests for all 4 tabs
+
+(Test setup to be completed in next iteration)
+
+## Known Limitations
+
+- No authentication/authorization (single interface for all roles)
+- Static truck locations (only updated via 3-stop cadence)
+- No real-time WebSocket updates
+- Heatmap requires Google Maps API key
+- CSV export not yet implemented
+
+## Roadmap
+
+- [ ] Complete Google Maps integration with pins and clustering
+- [ ] Implement drag-and-drop for job reordering
+- [ ] Add CSV import/export functionality
+- [ ] Build overtime defer modal
+- [ ] Add inventory tree drag-and-drop
+- [ ] Implement reassign job drawer
+- [ ] Add audit log drawer
+- [ ] Complete test suite (Vitest + Playwright)
+- [ ] Add Docker support
+
+## Contributing
+
+This is an internal project. Contact the team lead before making changes.
+
+## License
+
+Proprietary - All rights reserved

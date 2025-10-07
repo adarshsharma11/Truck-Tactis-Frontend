@@ -1,0 +1,63 @@
+[
+  {
+    "id": "truck-1",
+    "name": "Alpha-01",
+    "type": "large",
+    "capacity": 1500,
+    "dimensions": {
+      "length": 26,
+      "width": 8.5,
+      "height": 13.5
+    },
+    "curfew_flags": ["downtown", "residential"],
+    "status": "on_route",
+    "notes": "Heavy duty flatbed",
+    "current_location": {
+      "lat": 37.7749,
+      "lng": -122.4194
+    }
+  },
+  {
+    "id": "truck-2",
+    "name": "Bravo-02",
+    "type": "small",
+    "capacity": 800,
+    "dimensions": {
+      "length": 16,
+      "width": 7,
+      "height": 10
+    },
+    "status": "on_route",
+    "notes": "Box truck",
+    "current_location": {
+      "lat": 37.7930,
+      "lng": -122.4020
+    }
+  },
+  {
+    "id": "truck-3",
+    "name": "Charlie-03",
+    "type": "large",
+    "capacity": 1800,
+    "dimensions": {
+      "length": 28,
+      "width": 8.5,
+      "height": 13.5
+    },
+    "status": "idle",
+    "notes": "Refrigerated unit"
+  },
+  {
+    "id": "truck-4",
+    "name": "Delta-04",
+    "type": "small",
+    "capacity": 600,
+    "dimensions": {
+      "length": 14,
+      "width": 7,
+      "height": 9
+    },
+    "status": "at_yard",
+    "notes": "Cargo van"
+  }
+]

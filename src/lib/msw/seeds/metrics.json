@@ -1,0 +1,25 @@
+{
+  "date_range": {
+    "from": "2025-10-01",
+    "to": "2025-10-07"
+  },
+  "utilization_by_truck": [
+    { "truck_name": "Alpha-01", "utilization": 87 },
+    { "truck_name": "Bravo-02", "utilization": 72 },
+    { "truck_name": "Charlie-03", "utilization": 45 },
+    { "truck_name": "Delta-04", "utilization": 63 }
+  ],
+  "jobs_completed": 142,
+  "jobs_deferred": 18,
+  "on_time_percentage": 89,
+  "avg_service_time_minutes": 27,
+  "avg_drive_time_minutes": 18,
+  "heatmap_data": [
+    { "lat": 37.7749, "lng": -122.4194, "weight": 15 },
+    { "lat": 37.7833, "lng": -122.4167, "weight": 22 },
+    { "lat": 37.7781, "lng": -122.4031, "weight": 18 },
+    { "lat": 37.7930, "lng": -122.4020, "weight": 12 },
+    { "lat": 37.7399, "lng": -122.3912, "weight": 9 },
+    { "lat": 37.7827, "lng": -122.4652, "weight": 14 }
+  ]
+}
