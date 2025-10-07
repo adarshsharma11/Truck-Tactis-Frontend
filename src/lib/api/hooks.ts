@@ -105,6 +105,22 @@ export function useUpdateTruck() {
   });
 }
 
+export function useCreateTruck() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<Truck>) =>
+      apiClient.post<Truck>('/trucks', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trucks });
+      toast.success('Truck added');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add truck: ${error.message}`);
+    },
+  });
+}
+
 // Inventory hooks
 export function useInventory() {
   return useQuery({
