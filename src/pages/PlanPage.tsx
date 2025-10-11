@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
 import MapComponent from '@/components/ui/MapComponent';
+import { Autocomplete } from '@react-google-maps/api';
 import { env } from '@/config/env';
 
 export default function PlanPage() {
@@ -22,9 +23,55 @@ export default function PlanPage() {
   const createJob = useCreateJob();
   const { addLocation } = useLocationsStore();
 
+  // Memoized map configuration to prevent unnecessary re-renders
+  const mapCenter = useMemo(() => ({ lat: 37.7749, lng: -122.4194 }), []);
+  const mapZoom = useMemo(() => 12, []);
+  const mockTrucks = useMemo(() => [
+    {
+      id: 'truck-1',
+      name: 'Large Hauler #1',
+      type: 'large',
+      capacity: 5000,
+      dimensions: { length: 12, width: 3, height: 4 },
+      status: 'on_route',
+      current_location: { lat: 37.7849, lng: -122.4094 }
+    },
+    {
+      id: 'truck-2',
+      name: 'Small Delivery #1',
+      type: 'small',
+      capacity: 1000,
+      dimensions: { length: 6, width: 2.5, height: 3 },
+      status: 'idle',
+      current_location: { lat: 37.7649, lng: -122.4294 }
+    },
+    {
+      id: 'truck-3',
+      name: 'Large Cargo #2',
+      type: 'large',
+      capacity: 4500,
+      dimensions: { length: 11, width: 3, height: 3.5 },
+      status: 'idle',
+      current_location: { lat: 37.7749, lng: -122.4394 }
+    },
+    {
+      id: 'truck-4',
+      name: 'Small Van #2',
+      type: 'small',
+      capacity: 800,
+      dimensions: { length: 5, width: 2.2, height: 2.8 },
+      status: 'at_yard',
+      current_location: { lat: 37.7549, lng: -122.4194 }
+    }
+  ], []);
+
   // Form state
   const [locationName, setLocationName] = useState('');
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [country, setCountry] = useState('');
   const [action, setAction] = useState<'pickup' | 'dropoff'>('pickup');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [priority, setPriority] = useState('1');
@@ -38,6 +85,11 @@ export default function PlanPage() {
   const handleLocationSelect = (name: string, addr: string) => {
     setLocationName(name);
     setAddress(addr);
+    // Reset other address fields when selecting from saved locations
+    setCity('');
+    setState('');
+    setZipCode('');
+    setCountry('');
   };
 
   const handleCreateJob = () => {
@@ -56,10 +108,14 @@ export default function PlanPage() {
     }
 
 
-    // Save location
+    // Save location with detailed address
     addLocation({
       name: locationName,
       address,
+      city,
+      state,
+      zip_code: zipCode,
+      country,
       is_starred: false,
     });
 
@@ -82,6 +138,10 @@ export default function PlanPage() {
     // Reset form
     setLocationName('');
     setAddress('');
+    setCity('');
+    setState('');
+    setZipCode('');
+    setCountry('');
     setSelectedItems([]);
     setPriority('1');
     setEarliest('');
@@ -119,24 +179,94 @@ export default function PlanPage() {
 
             {/* Location Name */}
             <div>
-              <Label className="text-sm font-medium">Location Name</Label>
-              <Input
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                placeholder="e.g., Downtown Depot"
-                className="mt-2"
-              />
+              <Label className="text-sm font-medium">Address</Label>
+                <Autocomplete
+                onLoad={(autoC) => ((window as any).autocomplete = autoC)}
+                onPlaceChanged={() => {
+                  const place = (window as any).autocomplete.getPlace();
+                  if (place && place.formatted_address) {
+                    setAddress(place.formatted_address);
+                    if (place.name) setLocationName(place.name);
+                     
+                     // Extract address components
+                     const addressComponents = place.address_components || [];
+                     let newCity = '';
+                     let newState = '';
+                     let newZipCode = '';
+                     let newCountry = '';
+                     
+                     addressComponents.forEach((component: any) => {
+                       const types = component.types;
+                       
+                       if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+                         newCity = component.long_name;
+                       } else if (types.includes('administrative_area_level_1')) {
+                         newState = component.short_name;
+                       } else if (types.includes('postal_code')) {
+                         newZipCode = component.long_name;
+                       } else if (types.includes('country')) {
+                         newCountry = component.long_name;
+                       }
+                     });
+                     
+                     setCity(newCity);
+                     setState(newState);
+                     setZipCode(newZipCode);
+                     setCountry(newCountry);
+                   }
+                 }}
+              >
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="123 Main St, City, State"
+                  className="mt-2"
+                />
+              </Autocomplete>
             </div>
 
-            {/* Address */}
-            <div>
-              <Label className="text-sm font-medium">Address</Label>
-              <Input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="123 Main St, City, State"
-                className="mt-2"
-              />
+            {/* Address Details - Row 1 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm font-medium">City</Label>
+                <Input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="City"
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">State</Label>
+                <Input
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  placeholder="State"
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
+            {/* Address Details - Row 2 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm font-medium">ZIP Code</Label>
+                <Input
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  placeholder="ZIP Code"
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Country</Label>
+                <Input
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  placeholder="Country"
+                  className="mt-2"
+                />
+              </div>
             </div>
 
             {/* Action */}
@@ -264,20 +394,13 @@ export default function PlanPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Map Panel */}
-          <Card className="p-4 h-96 flex items-center justify-center bg-muted/20">
-            {/* <div className="text-center"> */}
-            {/* <div className="text-4xl mb-2">🗺️</div>
-              <p className="text-sm text-muted-foreground">
-                Google Maps will appear here
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Configure VITE_GOOGLE_MAPS_API_KEY in .env
-              </p> */}
-
-            <MapComponent apiKey={env.googleMapsApiKey}
-              center={{ lat: 37.7749, lng: -122.4194 }} // Centered on San Francisco
-              zoom={12} />
-            {/* </div> */}
+          <Card className="p-4 h-96 bg-muted/20">
+            <MapComponent 
+              apiKey={env.googleMapsApiKey}
+              center={mapCenter}
+              zoom={mapZoom}
+              // trucks={mockTrucks}
+            />
           </Card>
 
           {/* Jobs Table */}

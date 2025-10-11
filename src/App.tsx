@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { LoadScript } from '@react-google-maps/api';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -9,6 +10,7 @@ import InventoryPage from "./pages/InventoryPage";
 import OpsPage from "./pages/OpsPage";
 import DashPage from "./pages/DashPage";
 import NotFound from "./pages/NotFound";
+import { env } from '@/config/env';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +23,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <LoadScript googleMapsApiKey={env.googleMapsApiKey} libraries={['places']}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -37,7 +40,8 @@ const App = () => (
         </Layout>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+    </LoadScript>
+  </QueryClientProvider> 
 );
 
 export default App;
