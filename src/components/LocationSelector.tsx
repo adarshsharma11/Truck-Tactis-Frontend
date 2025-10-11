@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Star, MapPin, Check } from 'lucide-react';
 import { useLocationsStore } from '@/lib/store/locationsStore';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { AddressSearch } from './AddressSearch';
+import { env } from '@/config/env';
 
 interface LocationSelectorProps {
   onSelect: (name: string, address: string, lat?: number, lng?: number) => void;
 }
 
 export function LocationSelector({ onSelect }: LocationSelectorProps) {
+   const inputRef = useRef<HTMLInputElement | null>(null);
   const { getSortedLocations, toggleStar, updateLastUsed } = useLocationsStore();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -33,7 +36,16 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
     setOpen(false);
     setSearch('');
   };
-
+useEffect(() => {
+  if (!inputRef.current) return;
+  console.log(AddressSearch(
+    env.googleMapsApiKey,
+    inputRef.current,
+    (place) => {
+      console.log("Selected Place:", place);
+    },
+  ))
+}, [search]);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -45,6 +57,7 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
       <PopoverContent className="w-96 p-0" align="start">
         <div className="p-3 border-b border-border">
           <Input
+            ref={inputRef}
             placeholder="Search locations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

@@ -12,6 +12,8 @@ import { useJobs, useInventory, useCreateJob } from '@/lib/api/hooks';
 import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
+import MapComponent from '@/components/ui/MapComponent';
+import { env } from '@/config/env';
 
 export default function PlanPage() {
   const { selectedDate } = useDateStore();
@@ -42,7 +44,17 @@ export default function PlanPage() {
     if (!locationName || !address || selectedItems.length === 0) {
       toast.error('Please fill in location, address, and select at least one item');
       return;
+    } else if (!locationName) {
+      toast.error('Please fill in location');
+      return;
+    } else if (selectedItems.length === 0) {
+      toast.error('Please select at least one item');
+      return;
+    } else if (!address) {
+      toast.error('Please fill in address');
+      return;
     }
+
 
     // Save location
     addLocation({
@@ -79,7 +91,7 @@ export default function PlanPage() {
     setLargeTruckOnly(false);
     setCurfewFlag(false);
   };
-
+  // console.log(env.googleMapsApiKey)
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -253,15 +265,19 @@ export default function PlanPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Map Panel */}
           <Card className="p-4 h-96 flex items-center justify-center bg-muted/20">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🗺️</div>
+            {/* <div className="text-center"> */}
+            {/* <div className="text-4xl mb-2">🗺️</div>
               <p className="text-sm text-muted-foreground">
                 Google Maps will appear here
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Configure VITE_GOOGLE_MAPS_API_KEY in .env
-              </p>
-            </div>
+              </p> */}
+
+            <MapComponent apiKey={env.googleMapsApiKey}
+              center={{ lat: 37.7749, lng: -122.4194 }} // Centered on San Francisco
+              zoom={12} />
+            {/* </div> */}
           </Card>
 
           {/* Jobs Table */}
@@ -269,7 +285,7 @@ export default function PlanPage() {
             <h3 className="text-lg font-semibold mb-4">
               Jobs for {selectedDate}
             </h3>
-            
+
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
             ) : !jobs || jobs.length === 0 ? (
@@ -294,11 +310,10 @@ export default function PlanPage() {
                         <td className="py-3 px-4 text-sm">{idx + 1}</td>
                         <td className="py-3 px-4 text-sm font-medium">{job.location_name}</td>
                         <td className="py-3 px-4">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            job.action === 'pickup' 
-                              ? 'bg-accent/20 text-accent' 
-                              : 'bg-warning/20 text-warning'
-                          }`}>
+                          <span className={`text-xs px-2 py-1 rounded-full ${job.action === 'pickup'
+                            ? 'bg-accent/20 text-accent'
+                            : 'bg-warning/20 text-warning'
+                            }`}>
                             {job.action}
                           </span>
                         </td>
@@ -309,20 +324,19 @@ export default function PlanPage() {
                           {job.earliest && job.latest
                             ? `${job.earliest} - ${job.latest}`
                             : job.earliest
-                            ? `From ${job.earliest}`
-                            : job.latest
-                            ? `Until ${job.latest}`
-                            : '—'}
+                              ? `From ${job.earliest}`
+                              : job.latest
+                                ? `Until ${job.latest}`
+                                : '—'}
                         </td>
                         <td className="py-3 px-4 text-sm">{job.priority}</td>
                         <td className="py-3 px-4">
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            job.status === 'completed' 
-                              ? 'bg-success/20 text-success' 
-                              : job.status === 'in_progress'
+                          <span className={`text-xs px-2 py-1 rounded-full ${job.status === 'completed'
+                            ? 'bg-success/20 text-success'
+                            : job.status === 'in_progress'
                               ? 'bg-primary/20 text-primary'
                               : 'bg-muted text-muted-foreground'
-                          }`}>
+                            }`}>
                             {job.status.replace('_', ' ')}
                           </span>
                         </td>
