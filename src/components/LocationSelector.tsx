@@ -28,6 +28,8 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
     : sortedLocations;
 
   const handleSelect = (loc: typeof sortedLocations[0]) => {
+    console.log({loc});
+    
     onSelect(loc.name, loc.address, loc.lat, loc.lng);
     updateLastUsed(loc.id);
     setOpen(false);
