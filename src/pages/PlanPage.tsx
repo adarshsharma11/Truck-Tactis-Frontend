@@ -22,7 +22,7 @@ export default function PlanPage() {
   const { selectedDate } = useDateStore();
   // const { data: jobs, isLoading } = useJobs(selectedDate);
   const { job } = useJobStore(state => state);
-    // console.log({job})
+  // console.log({job})
   // const { data: inventory } = useInventory();
   // const { data: inventory } = useInventory();
   const createJob = useCreateJob();
@@ -75,7 +75,12 @@ export default function PlanPage() {
     }
   ], []);
 
-
+  const LosAngelesBounds = {
+    north: 34.5, // Top latitude of Los Angeles Valley
+    south: 33.5, // Bottom latitude of Los Angeles Valley
+    east: -118.0, // Right longitude of Los Angeles Valley
+    west: -118.8, // Left longitude of Los Angeles Valley
+  };
   // Form state
   const [locationName, setLocationName] = useState('');
   const [address, setAddress] = useState('');
@@ -135,15 +140,15 @@ export default function PlanPage() {
       action,
       items: selectedItems,
       priority: parseInt(priority) || 1,
-      earliest: earliest ?earliest: undefined,
-      latest: latest ?latest: undefined,
+      earliest: earliest ? earliest : undefined,
+      latest: latest ? latest : undefined,
       service_minutes_override: serviceMinutes ? parseInt(serviceMinutes) : undefined,
       notes: notes || undefined,
       large_truck_only: largeTruckOnly,
       curfew_flag: curfewFlag,
       date: selectedDate,
     })
-     toast.success('Job created successfully');
+    toast.success('Job created successfully');
     // Create job
     // createJob.mutate({
     //   location_name: locationName,
@@ -163,10 +168,6 @@ export default function PlanPage() {
     // Reset form
     setLocationName('');
     setAddress('');
-    setCity('');
-    setState('');
-    setZipCode('');
-    setCountry('');
     setSelectedItems([]);
     setPriority('1');
     setEarliest('');
@@ -177,7 +178,7 @@ export default function PlanPage() {
     setCurfewFlag(false);
   };
   // console.log(env.googleMapsApiKey)
-    //  console.log(typeof earliest, typeof latest,typeof selectedDate);
+  //  console.log(typeof earliest, typeof latest,typeof selectedDate);
 
   return (
     <div className="space-y-6">
@@ -213,88 +214,25 @@ export default function PlanPage() {
                   const place = (window as any).autocomplete.getPlace();
                   if (place && place.formatted_address) {
                     setAddress(place.formatted_address);
-                    if (place.name) setLocationName(place.name);
-                    // console.log({ place })
-                    // Extract address components
-                    const addressComponents = place.address_components || [];
-                    let newCity = '';
-                    let newState = '';
-                    let newZipCode = '';
-                    let newCountry = '';
-
-                    addressComponents.forEach((component: any) => {
-                      const types = component.types;
-
-                      if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-                        newCity = component.long_name;
-                      } else if (types.includes('administrative_area_level_1')) {
-                        newState = component.short_name;
-                      } else if (types.includes('postal_code')) {
-                        newZipCode = component.long_name;
-                      } else if (types.includes('country')) {
-                        newCountry = component.long_name;
-                      }
-                    });
-
-                    setCity(newCity);
-                    setState(newState);
-                    setZipCode(newZipCode);
-                    setCountry(newCountry);
                   }
+                }}
+                // Apply bounds to limit autocomplete results to Los Angeles Valley
+                options={{
+                  bounds: LosAngelesBounds,  // Restrict search to Los Angeles Valley
+                  componentRestrictions: { country: "us" },  // Only show US results
                 }}
               >
                 <Input
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="123 Main St, City, State"
+                  placeholder="Enter address (Los Angeles Valley)"
                   className="mt-2"
                 />
               </Autocomplete>
             </div>
 
-            {/* Address Details - Row 1 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium">City</Label>
-                <Input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="City"
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">State</Label>
-                <Input
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="State"
-                  className="mt-2"
-                />
-              </div>
-            </div>
 
-            {/* Address Details - Row 2 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium">ZIP Code</Label>
-                <Input
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  placeholder="ZIP Code"
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Country</Label>
-                <Input
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  placeholder="Country"
-                  className="mt-2"
-                />
-              </div>
-            </div>
+
 
             {/* Action */}
             <div>
@@ -437,7 +375,7 @@ export default function PlanPage() {
             </h3>
 
             {/* {isLoading ? ( */}
-            {job.length === 0  ? (
+            {job.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
             ) : !job || job.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">No jobs for this day</div>
@@ -494,7 +432,7 @@ export default function PlanPage() {
                         </td> */}
                         <td className="py-3 px-4">
                           <span className={`text-xs px-2 py-1 rounded-full bg-primary/20 text-primary`}>
-                          in progress
+                            in progress
                           </span>
                         </td>
                       </tr>
