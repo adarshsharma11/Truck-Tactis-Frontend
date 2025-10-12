@@ -161,7 +161,7 @@ const MapComponent: React.FC<MapProps> = ({ apiKey, center, zoom, trucks, jobs }
 
         // Info window content
         const infoContent = `
-          <div style="padding: 12px; min-width: 200px; font-family: Arial, sans-serif;">
+          <div style="padding: 12px; min-width: 200px; font-family: Arial, sans-serif;color: black;">
             <div style="display: flex; align-items: center; margin-bottom: 8px;">
               <div style="width: 16px; height: 16px; background-color: ${getTruckColor(truck.type, truck.status)}; border-radius: 50%; margin-right: 8px;"></div>
               <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">${truck.name}</h3>
@@ -214,7 +214,8 @@ const MapComponent: React.FC<MapProps> = ({ apiKey, center, zoom, trucks, jobs }
         borderRadius: '8px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
         fontSize: '12px',
-        zIndex: 1000
+        zIndex: 1000,
+        color:"black"
       }}>
         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Truck Types</div>
         <div style={{ marginBottom: '4px' }}>
