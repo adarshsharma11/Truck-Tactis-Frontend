@@ -3,7 +3,7 @@ import jobsData from './seeds/jobs.json';
 import trucksData from './seeds/trucks.json';
 import inventoryData from './seeds/inventory.json';
 import metricsData from './seeds/metrics.json';
-import type { Job, Truck, InventoryItem, Metrics } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckApi } from '@/types';
 
 // In-memory stores
 let jobs: Job[] = jobsData as Job[];

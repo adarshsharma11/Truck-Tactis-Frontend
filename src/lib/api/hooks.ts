@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { Job, Truck, InventoryItem, Metrics } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -85,7 +85,7 @@ export function useDeferJob() {
 export function useTrucks() {
   return useQuery({
     queryKey: queryKeys.trucks,
-    queryFn: () => apiClient.get<Truck[]>('/trucks'),
+    queryFn: () => apiClient.get<TruckData>('api/trucks'),
   });
 }
 
@@ -109,8 +109,8 @@ export function useCreateTruck() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: Partial<Truck>) =>
-      apiClient.post<Truck>('/trucks', data),
+    mutationFn: (data: Partial<TruckApi>) =>
+      apiClient.post<TruckApi>('api/trucks', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trucks });
       toast.success('Truck added');

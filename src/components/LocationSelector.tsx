@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 interface LocationSelectorProps {
-  onSelect: (name: string, address: string, lat?: number, lng?: number) => void;
+  onSelect: (name: string,  lat?: number, lng?: number) => void;
 }
 
 export function LocationSelector({ onSelect }: LocationSelectorProps) {
@@ -30,7 +30,7 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
   const handleSelect = (loc: typeof sortedLocations[0]) => {
     console.log({loc});
     
-    onSelect(loc.name, loc.address, loc.lat, loc.lng);
+    onSelect(loc.name,  loc.lat, loc.lng);
     updateLastUsed(loc.id);
     setOpen(false);
     setSearch('');
@@ -83,9 +83,9 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
                   onClick={() => handleSelect(loc)}
                 >
                   <p className="font-medium text-sm truncate">{loc.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  {/* <p className="text-xs text-muted-foreground truncate">
                     {loc.address}
-                  </p>
+                  </p> */}
                 </div>
                 <button
                   onClick={() => handleSelect(loc)}

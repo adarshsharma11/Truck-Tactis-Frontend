@@ -27,7 +27,34 @@ export interface Job {
   created_at: string;
   updated_at: string;
 }
+export interface TruckApi {
+  id?: number;
+  truckName?: string;
+  capacityCuFt?: number;
+  maxWeightLbs?: string | number;
+  lengthFt?: number;
+  widthFt?: number;
+  heightFt?: number;
+  truckType?: string;
+  color?: string;
+  yearOfManufacture?: number;
+  isActive?: boolean;
+  currentStatus?: string;
+  restrictedLoadTypes?: string[]; // Array of load types
+  gpsEnabled?: boolean;
+  lastKnownLat?: number | null;
+  lastKnownLng?: number | null;
+  driverId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  driver?: string | null;
 
+
+}
+export interface TruckData {
+  success: boolean;
+  data: TruckApi[];
+}
 export interface Truck {
   id: string;
   name: string;
