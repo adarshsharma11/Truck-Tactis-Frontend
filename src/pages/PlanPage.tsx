@@ -16,11 +16,16 @@ import MapComponent from '@/components/ui/MapComponent';
 import { Autocomplete } from '@react-google-maps/api';
 import { env } from '@/config/env';
 import { useJobStore } from '@/lib/store/useJobStore';
+import { useInventoryStore } from '@/lib/store/useInventoryStore';
 
 
 export default function PlanPage() {
   const { selectedDate } = useDateStore();
   const { job } = useJobStore(state => state);
+  const { inventory } = useInventoryStore(state => state);
+  // const { data: inventory } = useInventory();
+  
+  // const { data: inventory } = useInventory();
   const createJob = useCreateJob();
   const { addLocation } = useLocationsStore();
   const { addJob } = useJobStore();
@@ -28,48 +33,6 @@ export default function PlanPage() {
   // Memoized map configuration to prevent unnecessary re-renders
   const mapCenter = useMemo(() => ({ lat: 37.7749, lng: -122.4194 }), []);
   const mapZoom = useMemo(() => 12, []);
-  const inventory = useMemo(() => [
-    {
-      id: 'truck-1',
-      name: 'Large Hauler #1',
-      type: 'large',
-      capacity: 5000,
-      dimensions: { length: 12, width: 3, height: 4 },
-      status: 'on_route',
-      current_location: { lat: 37.7849, lng: -122.4094 },
-      is_folder: false,  // Add is_folder
-    },
-    {
-      id: 'truck-2',
-      name: 'Small Delivery #1',
-      type: 'small',
-      capacity: 1000,
-      dimensions: { length: 6, width: 2.5, height: 3 },
-      status: 'idle',
-      current_location: { lat: 37.7649, lng: -122.4294 },
-      is_folder: false,  // Add is_folder
-    },
-    {
-      id: 'truck-3',
-      name: 'Large Cargo #2',
-      type: 'large',
-      capacity: 4500,
-      dimensions: { length: 11, width: 3, height: 3.5 },
-      status: 'idle',
-      current_location: { lat: 37.7749, lng: -122.4394 },
-      is_folder: false,  // Add is_folder
-    },
-    {
-      id: 'truck-4',
-      name: 'Small Van #2',
-      type: 'small',
-      capacity: 800,
-      dimensions: { length: 5, width: 2.2, height: 2.8 },
-      status: 'at_yard',
-      current_location: { lat: 37.7549, lng: -122.4194 },
-      is_folder: false,  // Add is_folder
-    }
-  ], []);
 
   const LosAngelesBounds = {
     north: 34.5,
@@ -78,12 +41,7 @@ export default function PlanPage() {
     west: -118.8,
   };
   // Form state
-  const [locationName, setLocationName] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
   const [action, setAction] = useState<'pickup' | 'dropoff'>('pickup');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [priority, setPriority] = useState('1');
@@ -91,21 +49,26 @@ export default function PlanPage() {
   const [latest, setLatest] = useState('');
   const [serviceMinutes, setServiceMinutes] = useState('');
   const [notes, setNotes] = useState('');
+  const [lat, setLat] = useState<number>();
+  const [lng, setLng] = useState<number>();
   const [largeTruckOnly, setLargeTruckOnly] = useState(false);
   const [curfewFlag, setCurfewFlag] = useState(false);
 
-  const handleLocationSelect = (name: string, addr: string) => {
-    setLocationName(name);
-    setAddress(addr);
-    // Reset other address fields when selecting from saved locations
-    setCity('');
-    setState('');
-    setZipCode('');
-    setCountry('');
+  const handleLocationSelect = (name: string, lat: number, lng: number) => {
+    setAddress(name);
+    setLat(lat)
+    setLng(lng)
+
   };
 
   const handleCreateJob = () => {
-    if (!address) {
+    if (!address && selectedItems.length === 0) {
+      toast.error('Please fill in location, address, and select at least one item');
+      return;
+    }  else if (selectedItems.length === 0) {
+      toast.error('Please select at least one item');
+      return;
+    } else if (!address) {
       toast.error('Please fill in address');
       return;
     }
@@ -113,18 +76,18 @@ export default function PlanPage() {
 
     // Save location with detailed address
     addLocation({
-      name: locationName,
+      name: address,
       address,
-      city,
-      state,
-      zip_code: zipCode,
-      country,
+      lat,
+      lng,
       is_starred: false,
     });
     addJob({
-      name: locationName,
+      name: address,
       address,
       action,
+      lat,
+      lng,
       items: selectedItems,
       priority: parseInt(priority) || 1,
       earliest: earliest ? earliest : undefined,
@@ -153,7 +116,6 @@ export default function PlanPage() {
     // });
 
     // Reset form
-    setLocationName('');
     setAddress('');
     setSelectedItems([]);
     setPriority('1');
@@ -201,6 +163,10 @@ export default function PlanPage() {
                   const place = (window as any).autocomplete.getPlace();
                   if (place && place.formatted_address) {
                     setAddress(place.formatted_address);
+                    setLat(place.geometry.location?.lat())
+                    setLng(place.geometry.location?.lng())
+                    // console.log({place});
+
                   }
                 }}
                 options={{
@@ -216,7 +182,6 @@ export default function PlanPage() {
                 />
               </Autocomplete>
             </div>
-
             {/* Action */}
             <div>
               <Label className="text-sm font-medium">Action</Label>
@@ -347,6 +312,7 @@ export default function PlanPage() {
               apiKey={env.googleMapsApiKey}
               center={mapCenter}
               zoom={mapZoom}
+              jobs={job}
             // trucks={mockTrucks}
             />
           </Card>

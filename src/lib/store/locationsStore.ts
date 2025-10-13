@@ -5,10 +5,6 @@ export interface SavedLocation {
   id: string;
   name: string;
   address: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
-  country?: string;
   lat?: number;
   lng?: number;
   is_starred: boolean;

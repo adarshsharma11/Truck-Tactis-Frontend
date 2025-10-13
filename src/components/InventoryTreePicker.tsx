@@ -22,7 +22,7 @@ export function InventoryTreePicker({
     );
   };
 
-  const toggleSelection = (id: string, isFolder: boolean) => {
+  const toggleSelection = (id: string, isFolder: boolean,) => {
     if (isFolder) return; // Can't select folders
     
     const newSelection = selectedIds.includes(id)

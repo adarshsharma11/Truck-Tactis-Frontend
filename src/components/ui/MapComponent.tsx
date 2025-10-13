@@ -141,7 +141,7 @@ const MapComponent: React.FC<MapProps> = ({ apiKey, center, zoom, trucks, jobs }
     }
   };
 
-  const updateMarkers = () => {
+  const updateMarkers = () => {    
     if (!mapInstance.current) return;
 
     // Clear existing markers

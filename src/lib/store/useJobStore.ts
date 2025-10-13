@@ -5,10 +5,8 @@ export interface SavedJob {
     id: string;
     name: string;
     address: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
-    country?: string;
+    lat?: number;
+    lng?: number;
     last_used: string;
     action: string;
     priority: number;

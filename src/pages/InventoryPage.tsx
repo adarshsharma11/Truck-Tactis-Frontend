@@ -9,13 +9,17 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck } from '@/lib/api/hooks';
 import { toast } from 'sonner';
+import { useInventoryStore } from '@/lib/store/useInventoryStore';
+import { restMaterial } from '@/utils/contants';
+
 
 export default function InventoryPage() {
-  const { data: inventory, isLoading: inventoryLoading } = useInventory();
+  // const { data: inventory, isLoading: inventoryLoading } = useInventory();
   const { data: trucks, isLoading: trucksLoading } = useTrucks();
+  const { inventory } = useInventoryStore(state => state);
   const createItem = useCreateInventoryItem();
   const createTruck = useCreateTruck();
-
+  const { addinventory } = useInventoryStore();
   // Item form state
   const [itemName, setItemName] = useState('');
   const [itemSku, setItemSku] = useState('');
@@ -27,13 +31,19 @@ export default function InventoryPage() {
   const [itemLargeTruck, setItemLargeTruck] = useState(false);
 
   // Truck form state
-  const [truckName, setTruckName] = useState('');
-  const [truckCapacity, setTruckCapacity] = useState('');
-  const [truckMaxWeight, setTruckMaxWeight] = useState('');
-  const [truckLength, setTruckLength] = useState('');
-  const [truckWidth, setTruckWidth] = useState('');
-  const [truckHeight, setTruckHeight] = useState('');
-  const [truckIsLarge, setTruckIsLarge] = useState(false);
+  const [truckName, setTruckName] = useState<string>('');
+  const [color, setColor] = useState<string>('');
+  const [yearOfManufacture, setyearOfManufacture] = useState<number>(2022);
+  const [active, setActive] = useState<boolean>(true);
+  const [truckCapacity, setTruckCapacity] = useState<string>('');
+  const [truckMaxWeight, setTruckMaxWeight] = useState<string>('');
+  const [status, setStatus] = useState<string>('AVAILABLE');
+  const [truckLength, setTruckLength] = useState<string>('');
+  const [truckWidth, setTruckWidth] = useState<string>('');
+  const [truckHeight, setTruckHeight] = useState<string>('');
+  const [restrictedLoadTypes, setrestrictedLoadTypes] = useState<string[]>(['Hazardous']);
+  const [truckIsLarge, setTruckIsLarge] = useState<boolean>(false);
+  const [gpsEnabled, setGpsEnabled] = useState<boolean>(true);
 
   const handleCreateItem = () => {
     if (!itemName) {
@@ -41,6 +51,19 @@ export default function InventoryPage() {
       return;
     }
 
+    addinventory({
+      name: itemName,
+      sku: itemSku || undefined,
+      weight: itemWeight ? parseFloat(itemWeight) : undefined,
+      dimensions: itemLength && itemWidth && itemHeight ? {
+        length: parseFloat(itemLength),
+        width: parseFloat(itemWidth),
+        height: parseFloat(itemHeight),
+      } : undefined,
+      notes: itemNotes || undefined,
+      is_folder: false,
+    });
+    toast.success('Item created');
     createItem.mutate({
       name: itemName,
       sku: itemSku || undefined,
@@ -66,31 +89,45 @@ export default function InventoryPage() {
   };
 
   const handleCreateTruck = () => {
-    if (!truckName || !truckCapacity) {
+    if (!truckName && !truckCapacity) {
       toast.error('Please enter truck name and capacity');
       return;
+    } else if (!truckName) {
+      toast.error('Please enter truck name ');
+      return;
+    } else if (!truckCapacity) {
+      toast.error('Please enter capacity');
+      return;
     }
-
     createTruck.mutate({
-      name: truckName,
-      type: truckIsLarge ? 'large' : 'small',
-      capacity: parseFloat(truckCapacity),
-      dimensions: {
-        length: parseFloat(truckLength) || 0,
-        width: parseFloat(truckWidth) || 0,
-        height: parseFloat(truckHeight) || 0,
-      },
-      status: 'idle',
+      truckName: truckName,
+      capacityCuFt: parseFloat(truckCapacity) || 0,
+      maxWeightLbs: parseFloat(truckMaxWeight) || 0,
+      lengthFt: parseFloat(truckLength) || 0,
+      widthFt: parseFloat(truckWidth) || 0,
+      heightFt: parseFloat(truckHeight) || 0,
+      truckType: truckIsLarge ? 'LARGE' : 'SMALL',
+      color: color?color:"black",
+      isActive: active,
+      currentStatus: status,
+      yearOfManufacture: yearOfManufacture,
+      gpsEnabled: gpsEnabled,
     });
 
     // Reset form
     setTruckName('');
+    setColor('');
+    setStatus('AVAILABLE');
+    setrestrictedLoadTypes(['Hazardous']);
+    setActive(true);
+    setGpsEnabled(true);
     setTruckCapacity('');
     setTruckMaxWeight('');
     setTruckLength('');
     setTruckWidth('');
     setTruckHeight('');
     setTruckIsLarge(false);
+    setyearOfManufacture(2022)
   };
 
   return (
@@ -147,7 +184,7 @@ export default function InventoryPage() {
             {/* Inventory List */}
             <Card className="lg:col-span-2 p-6">
               <h3 className="text-lg font-semibold mb-4">Inventory Items</h3>
-              {inventoryLoading ? (
+              {inventory.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : !inventory || inventory.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No items yet</div>
@@ -185,6 +222,10 @@ export default function InventoryPage() {
                   <Input value={truckName} onChange={(e) => setTruckName(e.target.value)} placeholder="e.g., Alpha-01" className="mt-2" />
                 </div>
                 <div>
+                  <Label>Color</Label>
+                  <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} placeholder="e.g., Alpha-01" className="mt-2" />
+                </div>
+                <div>
                   <Label>Capacity (cu ft)</Label>
                   <Input type="number" step="1" value={truckCapacity} onChange={(e) => setTruckCapacity(e.target.value)} placeholder="e.g., 1000" className="mt-2" />
                 </div>
@@ -200,9 +241,83 @@ export default function InventoryPage() {
                     <Input type="number" step="0.1" value={truckHeight} onChange={(e) => setTruckHeight(e.target.value)} placeholder="H" />
                   </div>
                 </div>
+                <div>
+                  <Label className="text-sm font-medium">Year of Manufacture</Label>
+                  <select
+                    value={yearOfManufacture}
+                    onChange={(e) => setyearOfManufacture(Number(e.target.value))} id="yearOfManufacture" name="yearOfManufacture"
+                    className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
+                  >
+                    <option value="2000">2000</option>
+                    <option value="2001">2001</option>
+                    <option value="2002">2002</option>
+                    <option value="2003">2003</option>
+                    <option value="2004">2004</option>
+                    <option value="2005">2005</option>
+                    <option value="2006">2006</option>
+                    <option value="2007">2007</option>
+                    <option value="2008">2008</option>
+                    <option value="2009">2009</option>
+                    <option value="2010">2010</option>
+                    <option value="2011">2011</option>
+                    <option value="2012">2012</option>
+                    <option value="2013">2013</option>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
+                  >
+                    <option value="AVAILABLE">Available</option>
+                    <option value="ON DELIVERY">On Delivery</option>
+                    <option value="IN TRANSIT">In Transit</option>
+                    <option value="OFFLINE">Offline</option>
+                    <option value="ON BREAK">On Break</option>
+                    <option value="NEEDS MAINTENANCE">Needs Maintenance</option>
+                    <option value="OUT OF SERVICE">Out of Service</option>
+                    <option value="LOADED">Loaded</option>
+                    <option value="UNLOADED">Unloaded</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Restricted Load Types</Label>
+                  <select
+                    value={restrictedLoadTypes}
+                    onChange={(e) => setrestrictedLoadTypes([e.target.value])}
+                    className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
+                  >
+                    {restMaterial.map((val,i)=>
+                    <option key={i} value={val.value}>{val.title}</option>
+                    )}
+
+                  </select>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <Label>Active</Label>
+                  <Switch checked={active} onCheckedChange={setActive} />
+                </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <Label>Large Truck</Label>
                   <Switch checked={truckIsLarge} onCheckedChange={setTruckIsLarge} />
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <Label>GPS Enabled</Label>
+                  <Switch checked={gpsEnabled} onCheckedChange={setGpsEnabled} />
                 </div>
                 <Button className="w-full" onClick={handleCreateTruck} disabled={createTruck.isPending}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -217,42 +332,40 @@ export default function InventoryPage() {
                 <h3 className="text-lg font-semibold mb-4">Fleet Overview</h3>
                 {trucksLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading...</div>
-                ) : !trucks || trucks.length === 0 ? (
+                ) :  trucks?.data?.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">No trucks yet</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {trucks.map((truck) => (
+                    {trucks?.data?.map((truck) => (
                       <div key={truck.id} className="p-4 border border-border rounded-md hover:bg-muted/20">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">{truck.name}</h4>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              truck.type === 'large' ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
-                            }`}>
-                              {truck.type}
+                            <h4 className="font-semibold">{truck?.truckName}</h4>
+                            <span className={`text-xs px-2 py-1 rounded-full ${(truck?.truckType === 'large') ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
+                              }`}>
+                              {truck?.truckType}
                             </span>
                           </div>
                           <div className="text-sm space-y-1">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Capacity:</span>
-                              <span className="font-medium">{truck.capacity} cu ft</span>
+                              <span className="font-medium">{truck?.capacityCuFt} cu ft</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Dimensions:</span>
                               <span className="font-medium text-xs">
-                                {truck.dimensions.length}×{truck.dimensions.width}×{truck.dimensions.height} ft
+                                {truck?.lengthFt}×{truck?.widthFt}×{truck?.heightFt} ft
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Status:</span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                truck.status === 'on_route' 
-                                  ? 'bg-success/20 text-success'
-                                  : truck.status === 'idle'
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${truck?.currentStatus === 'AVAILABLE'
+                                ? 'bg-success/20 text-success'
+                                : truck?.currentStatus === 'idle'
                                   ? 'bg-warning/20 text-warning'
                                   : 'bg-muted text-muted-foreground'
-                              }`}>
-                                {truck.status.replace('_', ' ')}
+                                }`}>
+                                {truck?.currentStatus}
                               </span>
                             </div>
                           </div>
@@ -264,8 +377,8 @@ export default function InventoryPage() {
               </Card>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+        </TabsContent >
+      </Tabs >
+    </div >
   );
 }
