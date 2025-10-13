@@ -16,17 +16,15 @@ import MapComponent from '@/components/ui/MapComponent';
 import { Autocomplete } from '@react-google-maps/api';
 import { env } from '@/config/env';
 import { useJobStore } from '@/lib/store/useJobStore';
-import { useinventoryStore } from '@/lib/store/useInventoryStore';
+import { useInventoryStore } from '@/lib/store/useInventoryStore';
 
 
 export default function PlanPage() {
   const { selectedDate } = useDateStore();
   // const { data: jobs, isLoading } = useJobs(selectedDate);
   const { job } = useJobStore(state => state);
-  const { inventory } = useinventoryStore(state => state);
-  // console.log({job})
+  const { inventory } = useInventoryStore(state => state);
   // const { data: inventory } = useInventory();
-  // console.log({inventory});
   
   // const { data: inventory } = useInventory();
   const createJob = useCreateJob();

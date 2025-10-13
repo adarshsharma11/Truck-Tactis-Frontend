@@ -27,9 +27,7 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
       )
     : sortedLocations;
 
-  const handleSelect = (loc: typeof sortedLocations[0]) => {
-    console.log({loc});
-    
+  const handleSelect = (loc: typeof sortedLocations[0]) => {    
     onSelect(loc.name,  loc.lat, loc.lng);
     updateLastUsed(loc.id);
     setOpen(false);

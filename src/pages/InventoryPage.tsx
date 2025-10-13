@@ -9,16 +9,17 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck } from '@/lib/api/hooks';
 import { toast } from 'sonner';
-import { useinventoryStore } from '@/lib/store/useInventoryStore';
+import { useInventoryStore } from '@/lib/store/useInventoryStore';
+import { restMaterial } from '@/utils/contants';
 
 
 export default function InventoryPage() {
   // const { data: inventory, isLoading: inventoryLoading } = useInventory();
   const { data: trucks, isLoading: trucksLoading } = useTrucks();
-  const { inventory } = useinventoryStore(state => state);
+  const { inventory } = useInventoryStore(state => state);
   const createItem = useCreateInventoryItem();
   const createTruck = useCreateTruck();
-  const { addinventory } = useinventoryStore();
+  const { addinventory } = useInventoryStore();
   // Item form state
   const [itemName, setItemName] = useState('');
   const [itemSku, setItemSku] = useState('');
@@ -30,19 +31,19 @@ export default function InventoryPage() {
   const [itemLargeTruck, setItemLargeTruck] = useState(false);
 
   // Truck form state
-  const [truckName, setTruckName] = useState('');
-  const [color, setColor] = useState('');
+  const [truckName, setTruckName] = useState<string>('');
+  const [color, setColor] = useState<string>('');
   const [yearOfManufacture, setyearOfManufacture] = useState<number>(2022);
-  const [active, setActive] = useState(true);
-  const [truckCapacity, setTruckCapacity] = useState('');
-  const [truckMaxWeight, setTruckMaxWeight] = useState('');
-  const [status, setStatus] = useState('AVAILABLE');
-  const [truckLength, setTruckLength] = useState('');
-  const [truckWidth, setTruckWidth] = useState('');
-  const [truckHeight, setTruckHeight] = useState('');
-  const [restrictedLoadTypes, setrestrictedLoadTypes] = useState(['Hazardous']);
-  const [truckIsLarge, setTruckIsLarge] = useState(false);
-  const [gpsEnabled, setGpsEnabled] = useState(true);
+  const [active, setActive] = useState<boolean>(true);
+  const [truckCapacity, setTruckCapacity] = useState<string>('');
+  const [truckMaxWeight, setTruckMaxWeight] = useState<string>('');
+  const [status, setStatus] = useState<string>('AVAILABLE');
+  const [truckLength, setTruckLength] = useState<string>('');
+  const [truckWidth, setTruckWidth] = useState<string>('');
+  const [truckHeight, setTruckHeight] = useState<string>('');
+  const [restrictedLoadTypes, setrestrictedLoadTypes] = useState<string[]>(['Hazardous']);
+  const [truckIsLarge, setTruckIsLarge] = useState<boolean>(false);
+  const [gpsEnabled, setGpsEnabled] = useState<boolean>(true);
 
   const handleCreateItem = () => {
     if (!itemName) {
@@ -106,7 +107,7 @@ export default function InventoryPage() {
       widthFt: parseFloat(truckWidth) || 0,
       heightFt: parseFloat(truckHeight) || 0,
       truckType: truckIsLarge ? 'LARGE' : 'SMALL',
-      color: color,
+      color: color?color:"black",
       isActive: active,
       currentStatus: status,
       yearOfManufacture: yearOfManufacture,
@@ -300,20 +301,9 @@ export default function InventoryPage() {
                     onChange={(e) => setrestrictedLoadTypes([e.target.value])}
                     className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
                   >
-                    <option value="HAZARDOUS">Hazardous Materials</option>
-                    <option value="EXPLOSIVES">Explosives</option>
-                    <option value="FLAMMABLE_LIQUIDS">Flammable Liquids</option>
-                    <option value="TOXIC_SUBSTANCES">Toxic Substances</option>
-                    <option value="CORROSIVE">Corrosive Substances</option>
-                    <option value="RADIOACTIVE">Radioactive Materials</option>
-                    <option value="BIOHAZARDOUS">Biological Hazardous Materials</option>
-                    <option value="ASBESTOS">Asbestos</option>
-                    <option value="GASES">Compressed Gases</option>
-                    <option value="PERISHABLE_GOODS">Perishable Goods</option>
-                    <option value="LIVE_ANIMALS">Live Animals</option>
-                    <option value="HEAVY_LOADS">Heavy Loads</option>
-                    <option value="ILLEGAL_GOODS">Illegal Goods</option>
-                    <option value="WEAPONS_AMMUNITION">Weapons and Ammunition</option>
+                    {restMaterial.map((val,i)=>
+                    <option key={i} value={val.value}>{val.title}</option>
+                    )}
 
                   </select>
                 </div>

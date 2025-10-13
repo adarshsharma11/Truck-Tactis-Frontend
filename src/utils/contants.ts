@@ -1,0 +1,16 @@
+export const restMaterial = [
+    { title: "Hazardous Materials", value: "HAZARDOUS" },
+    { title: "Explosives", value: "EXPLOSIVES" },
+    { title: "Flammable Liquids", value: "FLAMMABLE_LIQUIDS" },
+    { title: "Toxic Substances", value: "TOXIC_SUBSTANCES" },
+    { title: "Corrosive Substances", value: "CORROSIVE" },
+    { title: "Radioactive Materials", value: "RADIOACTIVE" },
+    { title: "Biological Hazardous Materials", value: "BIOHAZARDOUS" },
+    { title: "Asbestos", value: "ASBESTOS" },
+    { title: "Compressed Gases", value: "GASES" },
+    { title: "Perishable Goods", value: "PERISHABLE_GOODS" },
+    { title: "Live Animals", value: "LIVE_ANIMALS" },
+    { title: "Heavy Loads", value: "HEAVY_LOADS" },
+    { title: "Illegal Goods", value: "ILLEGAL_GOODS" },
+    { title: "Weapons and Ammunition", value: "WEAPONS_AMMUNITION" },
+]

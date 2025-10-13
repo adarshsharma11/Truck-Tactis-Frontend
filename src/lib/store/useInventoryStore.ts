@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface Savedinventory {
+export interface addInventory {
     name: string;
     sku?: string;
     weight?: number;
@@ -17,19 +17,19 @@ export interface Savedinventory {
     id: string;
 }
 
-interface inventoryState {
-    inventory: Savedinventory[];
-    addinventory: (inventory: Omit<Savedinventory, 'id' | 'last_used'>) => void;
+interface inventoryData {
+    inventory: addInventory[];
+    addinventory: (inventory: Omit<addInventory, 'id' | 'last_used'>) => void;
     updateinventory: (id: string) => void;
 }
 
-export const useinventoryStore = create<inventoryState>()(
+export const useInventoryStore = create<inventoryData>()(
     persist(
         (set, get) => ({
             inventory: [],
 
             addinventory: (inventory) => {
-                const newinventory: Savedinventory = {
+                const newinventory: addInventory = {
                     ...inventory,
                     id: `loc-${Date.now()}`,
                 };
