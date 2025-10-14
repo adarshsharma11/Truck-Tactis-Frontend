@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useDateStore } from '@/lib/store/dateStore';
 import { useLocationsStore } from '@/lib/store/locationsStore';
-import { useJobs, useInventory, useCreateJob } from '@/lib/api/hooks';
+import { useCreateJob } from '@/lib/api/hooks';
 import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
@@ -21,7 +21,6 @@ import { useInventoryStore } from '@/lib/store/useInventoryStore';
 
 export default function PlanPage() {
   const { selectedDate } = useDateStore();
-  // const { data: jobs, isLoading } = useJobs(selectedDate);
   const { job } = useJobStore(state => state);
   const { inventory } = useInventoryStore(state => state);
   // const { data: inventory } = useInventory();
@@ -36,10 +35,10 @@ export default function PlanPage() {
   const mapZoom = useMemo(() => 12, []);
 
   const LosAngelesBounds = {
-    north: 34.5, // Top latitude of Los Angeles Valley
-    south: 33.5, // Bottom latitude of Los Angeles Valley
-    east: -118.0, // Right longitude of Los Angeles Valley
-    west: -118.8, // Left longitude of Los Angeles Valley
+    north: 34.5,
+    south: 33.5,
+    east: -118.0,
+    west: -118.8,
   };
   // Form state
   const [address, setAddress] = useState('');
@@ -170,10 +169,9 @@ export default function PlanPage() {
 
                   }
                 }}
-                // Apply bounds to limit autocomplete results to Los Angeles Valley
                 options={{
-                  bounds: LosAngelesBounds,  // Restrict search to Los Angeles Valley
-                  componentRestrictions: { country: "us" },  // Only show US results
+                  bounds: LosAngelesBounds,
+                  componentRestrictions: { country: "us" },
                 }}
               >
                 <Input
@@ -348,7 +346,7 @@ export default function PlanPage() {
                     {job.map((job, idx) => (
                       <tr key={job.id} className="border-b border-border hover:bg-muted/20">
                         <td className="py-3 px-4 text-sm">{idx + 1}</td>
-                        <td className="py-3 px-4 text-sm font-medium">{job.name}</td>
+                        <td className="py-3 px-4 text-sm font-medium">{job.address}</td>
                         {/* <td className="py-3 px-4 text-sm font-medium">{job.location_name}</td> */}
                         <td className="py-3 px-4">
                           <span className={`text-xs px-2 py-1 rounded-full ${job.action === 'pickup'
