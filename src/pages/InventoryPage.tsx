@@ -285,13 +285,9 @@ export default function InventoryPage() {
                   >
                     <option value="AVAILABLE">Available</option>
                     <option value="ON DELIVERY">On Delivery</option>
-                    <option value="IN TRANSIT">In Transit</option>
-                    <option value="OFFLINE">Offline</option>
-                    <option value="ON BREAK">On Break</option>
-                    <option value="NEEDS MAINTENANCE">Needs Maintenance</option>
-                    <option value="OUT OF SERVICE">Out of Service</option>
-                    <option value="LOADED">Loaded</option>
-                    <option value="UNLOADED">Unloaded</option>
+                    <option value="IN_TRANSIT">In Transit</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                    <option value="UNAVAILABLE">Unavailable</option>
                   </select>
                 </div>
                 <div>
