@@ -74,10 +74,72 @@ export interface Truck {
   };
 }
 
-export interface InventoryItem {
-  id: string;
+export interface addCategory {
   name: string;
-  sku?: string;
+  description: string;
+}
+export interface Category {
+  success: boolean;
+  data: CategoryItem[];
+}
+
+export interface CategoryItem {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;  // ISO date string
+  updatedAt: string;  // ISO date string
+}
+
+export interface InventoryItemData {
+  success: boolean;
+  data: Item[];
+}
+export interface Location {
+  placeId: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  isSaved: boolean;
+  createdById: string;
+}
+
+export interface createJob {
+  title: string;
+  actionType: "PICKUP" | "DELIVERY";  // Action type can be either PICKUP or DELIVERY
+  notes: string;
+  priority: number;
+  largeTruckOnly: boolean;
+  assignedTruckId: number;
+  assignedDriverId: number;
+  items: number[];  // Array of item IDs
+  locationId: number | null;  // Location ID can be null if not assigned
+  location: Location;  // Location is required and contains detailed information
+}
+
+export interface Item {
+  id: number;
+  name: string;
+  sku: string | null;
+  weightLbs: number;
+  lengthIn: number;
+  widthIn: number;
+  heightIn: number;
+  notes: string | null;
+  requiresLargeTruck: boolean;
+  categoryId: number | null;
+  createdAt: string;  // ISO date string
+  updatedAt: string;  // ISO date string
+  category: CategoryItem | null;  // Can be null or a Category object
+}
+export interface InventoryItem {
+  id?: string;
+  name: string;
   size?: string;
   weight?: number;
   dimensions?: {
@@ -85,12 +147,19 @@ export interface InventoryItem {
     width: number;
     height: number;
   };
-  notes?: string;
   tags?: string[];
   is_favorited?: boolean;
   parent_id?: string; // for tree structure
-  is_folder: boolean;
+  is_folder?: boolean;
   children?: InventoryItem[];
+  sku?: string | null;
+  weightLbs?: number | null;
+  lengthIn?: number | null;
+  widthIn?: number | null;
+  heightIn?: number | null;
+  notes?: string | null,
+  requiresLargeTruck?: boolean,
+  categoryId?: number | null
 }
 
 export interface InventoryNode extends InventoryItem {
