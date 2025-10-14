@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -8,6 +8,7 @@ export const queryKeys = {
   jobs: (date?: string) => ['jobs', date] as const,
   trucks: ['trucks'] as const,
   inventory: ['inventory'] as const,
+  Category: ['Category'] as const,
   metrics: (from?: string, to?: string) => ['metrics', from, to] as const,
 };
 
@@ -23,7 +24,7 @@ export function useCreateJob() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: Partial<Job>) => apiClient.post<Job>('/jobs', data),
+    mutationFn: (data: Partial<createJob>) => apiClient.post<createJob>('/jobs', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
       toast.success('Job created successfully');
@@ -125,7 +126,31 @@ export function useCreateTruck() {
 export function useInventory() {
   return useQuery({
     queryKey: queryKeys.inventory,
-    queryFn: () => apiClient.get<InventoryItem[]>('/inventory'),
+    queryFn: () => apiClient.get<InventoryItemData>('api/items'),
+  });
+}
+
+// categories hook
+export function useCategories() {
+  return useQuery({
+    queryKey: queryKeys.Category,
+    queryFn: () => apiClient.get<Category>('api/categories'),
+  });
+}
+
+export function useCategori() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: Partial<addCategory>) =>
+      apiClient.post<addCategory>('api/categories', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.Category });
+      // toast.success('Item created');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to create item: ${error.message}`);
+    },
   });
 }
 
@@ -134,7 +159,7 @@ export function useCreateInventoryItem() {
   
   return useMutation({
     mutationFn: (data: Partial<InventoryItem>) =>
-      apiClient.post<InventoryItem>('/inventory', data),
+      apiClient.post<InventoryItem>('api/items', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       toast.success('Item created');
@@ -144,6 +169,7 @@ export function useCreateInventoryItem() {
     },
   });
 }
+
 
 export function useUpdateInventoryItem() {
   const queryClient = useQueryClient();

@@ -7,28 +7,28 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck } from '@/lib/api/hooks';
+import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCategori } from '@/lib/api/hooks';
 import { toast } from 'sonner';
-import { useInventoryStore } from '@/lib/store/useInventoryStore';
 import { restMaterial } from '@/utils/contants';
 
 
 export default function InventoryPage() {
-  // const { data: inventory, isLoading: inventoryLoading } = useInventory();
+  const { data: inventory, isLoading: inventoryLoading } = useInventory();
   const { data: trucks, isLoading: trucksLoading } = useTrucks();
-  const { inventory } = useInventoryStore(state => state);
+  const { data: categories, isLoading: CategoriesLoading } = useCategories();
   const createItem = useCreateInventoryItem();
+  const createCategori = useCategori();
   const createTruck = useCreateTruck();
-  const { addinventory } = useInventoryStore();
-  // Item form state
-  const [itemName, setItemName] = useState('');
-  const [itemSku, setItemSku] = useState('');
-  const [itemWeight, setItemWeight] = useState('');
-  const [itemLength, setItemLength] = useState('');
-  const [itemWidth, setItemWidth] = useState('');
-  const [itemHeight, setItemHeight] = useState('');
-  const [itemNotes, setItemNotes] = useState('');
+  const [itemName, setItemName] = useState<string>('');
+  const [itemSku, setItemSku] = useState<string>('');
+  const [itemWeight, setItemWeight] = useState<string>('');
+  const [itemLength, setItemLength] = useState<string>('');
+  const [itemWidth, setItemWidth] = useState<string>('');
+  const [itemHeight, setItemHeight] = useState<string>('');
+  const [itemNotes, setItemNotes] = useState<string>('');
   const [itemLargeTruck, setItemLargeTruck] = useState(false);
+  //categorie form state
+  const [categori, setCategori] = useState<null | number>(null);
 
   // Truck form state
   const [truckName, setTruckName] = useState<string>('');
@@ -51,33 +51,27 @@ export default function InventoryPage() {
       return;
     }
 
-    addinventory({
-      name: itemName,
-      sku: itemSku || undefined,
-      weight: itemWeight ? parseFloat(itemWeight) : undefined,
-      dimensions: itemLength && itemWidth && itemHeight ? {
-        length: parseFloat(itemLength),
-        width: parseFloat(itemWidth),
-        height: parseFloat(itemHeight),
-      } : undefined,
-      notes: itemNotes || undefined,
-      is_folder: false,
-    });
-    toast.success('Item created');
+    if (categori === null) {
+      createCategori.mutate({
+        name: itemName,
+        description: itemNotes,
+      });
+    }
+ 
     createItem.mutate({
       name: itemName,
-      sku: itemSku || undefined,
-      weight: itemWeight ? parseFloat(itemWeight) : undefined,
-      dimensions: itemLength && itemWidth && itemHeight ? {
-        length: parseFloat(itemLength),
-        width: parseFloat(itemWidth),
-        height: parseFloat(itemHeight),
-      } : undefined,
-      notes: itemNotes || undefined,
-      is_folder: false,
+      sku: itemSku || null,
+      weightLbs: itemWeight ? parseFloat(itemWeight) : null,
+      lengthIn: itemLength?parseFloat(itemLength):null,
+      widthIn: itemWidth?parseFloat(itemWidth):null,
+      heightIn: itemHeight?parseFloat(itemHeight):null,
+      notes: itemNotes || null,
+      requiresLargeTruck: itemLargeTruck,
+      categoryId: categori || null
     });
 
     // Reset form
+    setCategori(null)
     setItemName('');
     setItemSku('');
     setItemWeight('');
@@ -107,7 +101,7 @@ export default function InventoryPage() {
       widthFt: parseFloat(truckWidth) || 0,
       heightFt: parseFloat(truckHeight) || 0,
       truckType: truckIsLarge ? 'LARGE' : 'SMALL',
-      color: color?color:"black",
+      color: color ? color : "black",
       isActive: active,
       currentStatus: status,
       yearOfManufacture: yearOfManufacture,
@@ -150,6 +144,22 @@ export default function InventoryPage() {
                   <Label>Name</Label>
                   <Input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Item name" className="mt-2" />
                 </div>
+                {inventory?.data?.length > 0 ?
+                  <div>
+                    <Label className="text-sm font-medium">Categories</Label>
+                    <select
+                      value={categori}
+                      onChange={(e) => setCategori(Number(e.target.value))} id="yearOfManufacture" name="yearOfManufacture"
+                      className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
+                    >
+                      <option value={null}>Select</option>
+                      {
+                        categories?.data?.map((val, i) => (
+                          <option value={val.id}>{val.name}</option>
+                        ))
+                      }
+                    </select>
+                  </div> : null}
                 <div>
                   <Label>SKU</Label>
                   <Input value={itemSku} onChange={(e) => setItemSku(e.target.value)} placeholder="Optional" className="mt-2" />
@@ -184,24 +194,24 @@ export default function InventoryPage() {
             {/* Inventory List */}
             <Card className="lg:col-span-2 p-6">
               <h3 className="text-lg font-semibold mb-4">Inventory Items</h3>
-              {inventory.length === 0 ? (
+              {inventoryLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
-              ) : !inventory || inventory.length === 0 ? (
+              ) : !inventory || inventory?.data?.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No items yet</div>
               ) : (
                 <div className="space-y-2">
-                  {inventory.map((item) => (
+                  {inventory?.data?.map((item) => (
                     <div key={item.id} className="p-4 border border-border rounded-md hover:bg-muted/20">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{item.name}</p>
                           {item.sku && <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>}
-                          {item.weight && <p className="text-xs text-muted-foreground">Weight: {item.weight} lbs</p>}
+                          {item.weightLbs && <p className="text-xs text-muted-foreground">Weight: {item.weightLbs} lbs</p>}
                         </div>
-                        {item.is_favorited && <span className="text-warning">⭐</span>}
+                        {/* {item.is_favorited && <span className="text-warning">⭐</span>} */}
                       </div>
-                      {item.children && item.children.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-2">{item.children.length} sub-items</p>
+                      {item.category && (
+                        <p className="text-xs text-muted-foreground mt-2">{item.name} sub-items</p>
                       )}
                     </div>
                   ))}
@@ -297,8 +307,8 @@ export default function InventoryPage() {
                     onChange={(e) => setrestrictedLoadTypes([e.target.value])}
                     className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
                   >
-                    {restMaterial.map((val,i)=>
-                    <option key={i} value={val.value}>{val.title}</option>
+                    {restMaterial.map((val, i) =>
+                      <option key={i} value={val.value}>{val.title}</option>
                     )}
 
                   </select>
@@ -328,7 +338,7 @@ export default function InventoryPage() {
                 <h3 className="text-lg font-semibold mb-4">Fleet Overview</h3>
                 {trucksLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading...</div>
-                ) :  trucks?.data?.length === 0 ? (
+                ) : trucks?.data?.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">No trucks yet</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

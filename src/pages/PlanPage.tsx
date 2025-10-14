@@ -166,7 +166,6 @@ export default function PlanPage() {
                     setLat(place.geometry.location?.lat())
                     setLng(place.geometry.location?.lng())
                     // console.log({place});
-
                   }
                 }}
                 options={{
@@ -380,7 +379,7 @@ export default function PlanPage() {
                           </span>
                         </td> */}
                         <td className="py-3 px-4">
-                          <span className={`text-xs px-2 py-1 rounded-full bg-primary/20 text-primary`}>
+                          <span className={`text-xs px-2 py-1 rounded-full bg-primary/20 text-primary w-fit`}>
                             in progress
                           </span>
                         </td>
