@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useDateStore } from '@/lib/store/dateStore';
 import { useLocationsStore } from '@/lib/store/locationsStore';
-import { useCreateJob } from '@/lib/api/hooks';
+import { useCategoriesWithItems, useCreateJob, useInventory, useJobOptimize, useJobs } from '@/lib/api/hooks';
 import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
@@ -17,20 +17,34 @@ import { Autocomplete } from '@react-google-maps/api';
 import { env } from '@/config/env';
 import { useJobStore } from '@/lib/store/useJobStore';
 import { useInventoryStore } from '@/lib/store/useInventoryStore';
+import { JobOptimize, Location } from '@/types';
+import { getPlaceDetails } from '@/components/getPlaceDetails ';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 
+export const queryKeys = {
+  // jobs: (date?: string) => ['jobs', date] as const,
+  jobs: ['jobs'] as const,
+  metrics: (from?: string, to?: string) => ['metrics', from, to] as const,
+};
 
 export default function PlanPage() {
+  const { data: jobs, isLoading: jobsLoading } = useJobs();
   const { selectedDate } = useDateStore();
   const { job } = useJobStore(state => state);
-  const { inventory } = useInventoryStore(state => state);
   // const { data: inventory } = useInventory();
-  
-  // const { data: inventory } = useInventory();
-  const createJob = useCreateJob();
-  const { addLocation } = useLocationsStore();
-  const { addJob } = useJobStore();
+  const { data: inventory, isLoading: inventoryLoading } = useCategoriesWithItems();
 
-  // Memoized map configuration to prevent unnecessary re-renders
+
+
+  const createJob = useCreateJob();
+  const optimizeMutation  = useJobOptimize();
+  const { data: JobOptimizeData, isPending } = optimizeMutation;
+  const { addLocation } = useLocationsStore();
+  const handleOptimizeClick = () => {
+    optimizeMutation.mutate(); // ✅ No payload needed
+  };
   const mapCenter = useMemo(() => ({ lat: 37.7749, lng: -122.4194 }), []);
   const mapZoom = useMemo(() => 12, []);
 
@@ -41,23 +55,34 @@ export default function PlanPage() {
     west: -118.8,
   };
   // Form state
-  const [address, setAddress] = useState('');
-  const [action, setAction] = useState<'pickup' | 'dropoff'>('pickup');
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [priority, setPriority] = useState('1');
-  const [earliest, setEarliest] = useState('');
-  const [latest, setLatest] = useState('');
-  const [serviceMinutes, setServiceMinutes] = useState('');
-  const [notes, setNotes] = useState('');
-  const [lat, setLat] = useState<number>();
-  const [lng, setLng] = useState<number>();
-  const [largeTruckOnly, setLargeTruckOnly] = useState(false);
-  const [curfewFlag, setCurfewFlag] = useState(false);
+  const [address, setAddress] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [action, setAction] = useState<'PICKUP' | 'DROPOFF'>('PICKUP');
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [priority, setPriority] = useState<string>('1');
+  const [earliest, setEarliest] = useState<string>('');
+  const [latest, setLatest] = useState<string>('');
+  const [serviceMinutes, setServiceMinutes] = useState<string>('');
+  const [location, setLocation] = useState<Location>({
+    placeId: "",
+    name: "",
+    address: "",
+    latitude: null,
+    longitude: null,
+    city: "",
+    state: "",
+    country: "",
+    postalCode: "",
+    isSaved: true,
+    // createdById: null
+  });
+  const [notes, setNotes] = useState<string>('');
+  const [largeTruckOnly, setLargeTruckOnly] = useState<boolean>(false);
+  const [curfewFlag, setCurfewFlag] = useState<boolean>(false);
 
-  const handleLocationSelect = (name: string, lat: number, lng: number) => {
-    setAddress(name);
-    setLat(lat)
-    setLng(lng)
+  const handleLocationSelect = (location:Location) => {
+    setAddress(location.address);
+
 
   };
 
@@ -65,7 +90,7 @@ export default function PlanPage() {
     if (!address && selectedItems.length === 0) {
       toast.error('Please fill in location, address, and select at least one item');
       return;
-    }  else if (selectedItems.length === 0) {
+    } else if (selectedItems.length === 0) {
       toast.error('Please select at least one item');
       return;
     } else if (!address) {
@@ -74,49 +99,46 @@ export default function PlanPage() {
     }
 
 
-    // Save location with detailed address
+    // // Save location with detailed address
     addLocation({
-      name: address,
-      address,
-      lat,
-      lng,
-      is_starred: false,
+      ...location
     });
-    addJob({
-      name: address,
-      address,
-      action,
-      lat,
-      lng,
-      items: selectedItems,
-      priority: parseInt(priority) || 1,
-      earliest: earliest ? earliest : undefined,
-      latest: latest ? latest : undefined,
-      service_minutes_override: serviceMinutes ? parseInt(serviceMinutes) : undefined,
-      notes: notes || undefined,
-      large_truck_only: largeTruckOnly,
-      curfew_flag: curfewFlag,
-      date: selectedDate,
-    })
-    toast.success('Job created successfully');
+
     // Create job
-    // createJob.mutate({
-    //   location_name: locationName,
-    //   address,
-    //   action,
-    //   items: selectedItems,
-    //   priority: parseInt(priority) || 1,
-    //   earliest: earliest || undefined,
-    //   latest: latest || undefined,
-    //   service_minutes_override: serviceMinutes ? parseInt(serviceMinutes) : undefined,
-    //   notes: notes || undefined,
-    //   large_truck_only: largeTruckOnly,
-    //   curfew_flag: curfewFlag,
-    //   date: selectedDate,
-    // });
+    createJob.mutate({
+      title: title,
+      actionType: action,
+      notes: notes || null,
+      priority: parseInt(priority) || 1,
+      largeTruckOnly: largeTruckOnly,
+      // assignedTruckId: null,
+      // assignedDriverId: null,
+      items: selectedItems,
+      // locationId: null,
+      location: location,
+      earliestTime: earliest || "",
+      latestTime: latest || "null",
+      serviceMinutes: serviceMinutes ? parseInt(serviceMinutes) : null,
+      curfewFlag: curfewFlag,
+      // date: selectedDate,
+    });
 
     // Reset form
     setAddress('');
+    setTitle('');
+    setLocation({
+      placeId: "",
+      name: "",
+      address: "",
+      latitude: null,
+      longitude: null,
+      city: "",
+      state: "",
+      country: "",
+      postalCode: "",
+      isSaved: true,
+      createdById: null
+    });
     setSelectedItems([]);
     setPriority('1');
     setEarliest('');
@@ -126,8 +148,6 @@ export default function PlanPage() {
     setLargeTruckOnly(false);
     setCurfewFlag(false);
   };
-  // console.log(env.googleMapsApiKey)
-  //  console.log(typeof earliest, typeof latest,typeof selectedDate);
 
   return (
     <div className="space-y-6">
@@ -153,19 +173,38 @@ export default function PlanPage() {
                 <LocationSelector onSelect={handleLocationSelect} />
               </div>
             </div>
-
+            <div>
+              <Label className="text-sm font-medium">Title</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title"
+                className="mt-2"
+              />
+            </div>
             {/* Location Name */}
             <div>
               <Label className="text-sm font-medium">Address</Label>
               <Autocomplete
                 onLoad={(autoC) => ((window as any).autocomplete = autoC)}
-                onPlaceChanged={() => {
+                onPlaceChanged={async () => {
                   const place = (window as any).autocomplete.getPlace();
-                  if (place && place.formatted_address) {
-                    setAddress(place.formatted_address);
-                    setLat(place.geometry.location?.lat())
-                    setLng(place.geometry.location?.lng())
-                    // console.log({place});
+                  const getPlaceDetailsData = await getPlaceDetails(env.googleMapsApiKey, place.place_id,);
+                  if (place && getPlaceDetailsData.address) {
+                    setAddress(getPlaceDetailsData.address)
+                    setLocation({
+                      placeId: place.place_id,
+                      name: getPlaceDetailsData.name,
+                      address: getPlaceDetailsData.address,
+                      latitude: getPlaceDetailsData.latitude,
+                      longitude: getPlaceDetailsData.longitude,
+                      city: getPlaceDetailsData.city,
+                      state: getPlaceDetailsData.state,
+                      country: getPlaceDetailsData.country,
+                      postalCode: getPlaceDetailsData.postalCode,
+                      isSaved: true,
+                      // createdById: null
+                    })
                   }
                 }}
                 options={{
@@ -186,11 +225,11 @@ export default function PlanPage() {
               <Label className="text-sm font-medium">Action</Label>
               <select
                 value={action}
-                onChange={(e) => setAction(e.target.value as 'pickup' | 'dropoff')}
+                onChange={(e) => setAction(e.target.value as 'PICKUP' | 'DROPOFF')}
                 className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
               >
-                <option value="pickup">Pickup</option>
-                <option value="dropoff">Dropoff</option>
+                <option value="PICKUP">Pickup</option>
+                <option value="DROPOFF">Dropoff</option>
               </select>
             </div>
 
@@ -200,9 +239,9 @@ export default function PlanPage() {
                 Items ({selectedItems.length} selected)
               </Label>
               <div className="mt-2">
-                {inventory && inventory.length > 0 ? (
+                {inventory && inventory?.data?.length > 0 ? (
                   <InventoryTreePicker
-                    inventory={inventory}
+                    inventory={inventory?.data}
                     selectedIds={selectedItems}
                     onSelectionChange={setSelectedItems}
                   />
@@ -217,14 +256,15 @@ export default function PlanPage() {
             {/* Priority */}
             <div>
               <Label className="text-sm font-medium">Priority</Label>
-              <Input
-                type="number"
+              <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                placeholder="1"
-                min="1"
-                className="mt-2"
-              />
+                className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
+              >
+                <option value="1">High</option>
+                <option value="2">Medium</option>
+                <option value="3">Low</option>
+              </select>
             </div>
 
             {/* Time Constraints */}
@@ -318,57 +358,73 @@ export default function PlanPage() {
 
           {/* Jobs Table */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Jobs for {selectedDate}
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold mb-4">
+                Jobs for {selectedDate}
+              </h3>
+              <Button
+                className=""
+                onClick={handleOptimizeClick}
+                disabled={isPending}
+              >
+                Optimize Routes
+              </Button>
+            </div>
+            <Tabs defaultValue="jobs" className="w-full">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="jobs">Inventory</TabsTrigger>
+                <TabsTrigger value="Optimize Routes"> View Assigned Routes</TabsTrigger>
+              </TabsList>
+              <TabsContent value="jobs" className="space-y-4">
 
-            {/* {isLoading ? ( */}
-            {job.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
-            ) : !job || job.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No jobs for this day</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">#</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Location</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Action</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Items</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Time Window</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Priority</th>
-                      <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {job.map((job, idx) => (
-                      <tr key={job.id} className="border-b border-border hover:bg-muted/20">
-                        <td className="py-3 px-4 text-sm">{idx + 1}</td>
-                        <td className="py-3 px-4 text-sm font-medium">{job.address}</td>
-                        {/* <td className="py-3 px-4 text-sm font-medium">{job.location_name}</td> */}
-                        <td className="py-3 px-4">
-                          <span className={`text-xs px-2 py-1 rounded-full ${job.action === 'pickup'
-                            ? 'bg-accent/20 text-accent'
-                            : 'bg-warning/20 text-warning'
-                            }`}>
-                            {job.action}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {job?.items?.length} items
-                        </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {job.earliest && job.latest
-                            ? `${job.earliest} - ${job.latest}`
-                            : job.earliest
-                              ? `From ${job.earliest}`
-                              : job.latest
-                                ? `Until ${job.latest}`
-                                : '—'}
-                        </td>
-                        <td className="py-3 px-4 text-sm">{job.priority}</td>
-                        {/* <td className="py-3 px-4">
+                {jobsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
+                ) : !jobs || jobs?.data?.jobs?.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No jobs for this day</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-left">
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">#</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Title</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Location</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Action</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Items</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Time Window</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Priority</th>
+                          {/* <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Status</th> */}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {jobs?.data?.jobs?.map((job, idx) => (
+                          <tr key={job.id} className="border-b border-border hover:bg-muted/20">
+                            <td className="py-3 px-4 text-sm">{idx + 1}</td>
+                            <td className="py-3 px-4 text-sm font-medium">{job.title}</td>
+                            <td className="py-3 px-4 text-sm font-medium">{job.location.address}</td>
+                            {/* <td className="py-3 px-4 text-sm font-medium">{job.location_name}</td> */}
+                            <td className="py-3 px-4">
+                              <span className={`text-xs px-2 py-1 rounded-full ${job.actionType === 'PICKUP'
+                                ? 'bg-accent/20 text-accent'
+                                : 'bg-warning/20 text-warning'
+                                }`}>
+                                {job.actionType}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-sm text-muted-foreground">
+                              {job?.items?.length} items
+                            </td>
+                            <td className="py-3 px-4 text-sm text-muted-foreground">
+                              {job.earliestTime && job.latestTime
+                                ? `${job.earliestTime} - ${job.latestTime}`
+                                : job.earliestTime
+                                  ? `From ${job.earliestTime}`
+                                  : job.latestTime
+                                    ? `Until ${job.latestTime}`
+                                    : '—'}
+                            </td>
+                            <td className="py-3 px-4 text-sm">{job.priority === 1 ? "High" : job.priority === 1 ? "Medium" : "Low"}</td>
+                            {/* <td className="py-3 px-4">
                           <span className={`text-xs px-2 py-1 rounded-full ${job.status === 'completed'
                             ? 'bg-success/20 text-success'
                             : job.status === 'in_progress'
@@ -378,17 +434,54 @@ export default function PlanPage() {
                             {job.status.replace('_', ' ')}
                           </span>
                         </td> */}
-                        <td className="py-3 px-4">
+                            {/* <td className="py-3 px-4">
                           <span className={`text-xs px-2 py-1 rounded-full bg-primary/20 text-primary w-fit`}>
                             in progress
                           </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                        </td> */}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="Optimize Routes" className="space-y-4">
+                {JobOptimizeData?.assignments?.length > 0 ? <div className="p-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-left">
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Job ID</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Job Title</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Assigned Truck</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Driver</th>
+                          <th className="ppy-2 px-4 text-sm font-medium text-muted-foreground">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {JobOptimizeData?.assignments?.map((job) => (
+                          <tr
+                            key={job.jobId}
+                            className="border-t hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td className="py-3 px-4 text-gray-800">{job.jobId}</td>
+                            <td className="py-3 px-4">{job.jobTitle}</td>
+                            <td className="py-3 px-4">{job.assignedTruck}</td>
+                            <td className="py-3 px-4">{job.driver}</td>
+                            <td className="py-3 px-4 text-center font-semibold text-blue-600">
+                              {job.score}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div> :
+                  <div className="text-center py-8 text-muted-foreground">No jobs for this day</div>}
+              </TabsContent>
+            </Tabs>
+            {/* {isLoading ? ( */}
           </Card>
         </div>
       </div>

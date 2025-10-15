@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob, JobResponse, CategoryResponse, JobOptimize } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
 export const queryKeys = {
-  jobs: (date?: string) => ['jobs', date] as const,
+  // jobs: (date?: string) => ['jobs', date] as const,
+  jobs: ['jobs'] as const,
   trucks: ['trucks'] as const,
   inventory: ['inventory'] as const,
   Category: ['Category'] as const,
@@ -13,20 +14,46 @@ export const queryKeys = {
 };
 
 // Jobs hooks
-export function useJobs(date?: string) {
+export function useJobs() {
   return useQuery({
-    queryKey: queryKeys.jobs(date),
-    queryFn: () => apiClient.get<Job[]>(`/jobs${date ? `?date=${date}` : ''}`),
+    queryKey: queryKeys.jobs,
+    queryFn: () => apiClient.get<JobResponse>(`api/jobs`),
   });
 }
+// export function useJobOptimize() {
+//   return useQuery<JobOptimize>({
+//     queryKey: queryKeys.jobs,
+//     queryFn: () => apiClient.get<JobOptimize>('api/jobs/optimize'),
+//     enabled: false,
+//   });
+// }
+export function useJobOptimize() {
+  const queryClient = useQueryClient();
 
+  return useMutation<JobOptimize, Error, void>({
+    mutationFn: () => apiClient.post<JobOptimize>('api/jobs/optimize'),
+    onSuccess: (data: JobOptimize) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+      
+      // Check if no jobs in response
+      if (!data.assignments || data.assignments.length === 0) {
+        toast.info('No jobs for this day');
+      } else {
+        toast.success(`Optimized ${data?.assignments?.length} jobs successfully`);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to optimize jobs: ${error.message}`);
+    },
+  });
+}
 export function useCreateJob() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: Partial<createJob>) => apiClient.post<createJob>('/jobs', data),
+    mutationFn: (data: Partial<createJob>) => apiClient.post<createJob>('api/jobs', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job created successfully');
     },
     onError: (error: Error) => {
@@ -37,12 +64,12 @@ export function useCreateJob() {
 
 export function useUpdateJob() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Job> }) =>
       apiClient.patch<Job>(`/jobs/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job updated');
     },
     onError: (error: Error) => {
@@ -53,11 +80,11 @@ export function useUpdateJob() {
 
 export function useDeleteJob() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => apiClient.delete(`/jobs/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job deleted');
     },
     onError: (error: Error) => {
@@ -68,12 +95,12 @@ export function useDeleteJob() {
 
 export function useDeferJob() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, new_priority }: { id: string; new_priority: number }) =>
       apiClient.post<Job>(`/jobs/${id}/defer`, { new_priority }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job deferred');
     },
     onError: (error: Error) => {
@@ -92,7 +119,7 @@ export function useTrucks() {
 
 export function useUpdateTruck() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Truck> }) =>
       apiClient.patch<Truck>(`/trucks/${id}`, data),
@@ -108,7 +135,7 @@ export function useUpdateTruck() {
 
 export function useCreateTruck() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: Partial<TruckApi>) =>
       apiClient.post<TruckApi>('api/trucks', data),
@@ -137,10 +164,17 @@ export function useCategories() {
     queryFn: () => apiClient.get<Category>('api/categories'),
   });
 }
+//categories With Items
+export function useCategoriesWithItems() {
+  return useQuery({
+    queryKey: queryKeys.Category,
+    queryFn: () => apiClient.get<CategoryResponse>('api/items/categoriesWithItems'),
+  });
+}
 
 export function useCategori() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: Partial<addCategory>) =>
       apiClient.post<addCategory>('api/categories', data),
@@ -156,7 +190,7 @@ export function useCategori() {
 
 export function useCreateInventoryItem() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: Partial<InventoryItem>) =>
       apiClient.post<InventoryItem>('api/items', data),
@@ -173,7 +207,7 @@ export function useCreateInventoryItem() {
 
 export function useUpdateInventoryItem() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<InventoryItem> }) =>
       apiClient.patch<InventoryItem>(`/inventory/${id}`, data),
@@ -189,7 +223,7 @@ export function useUpdateInventoryItem() {
 
 export function useDeleteInventoryItem() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => apiClient.delete(`/inventory/${id}`),
     onSuccess: () => {
@@ -205,12 +239,12 @@ export function useDeleteInventoryItem() {
 // Operations hooks
 export function useMark3Complete() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (truck_id: string) =>
       apiClient.post<{ completed: number }>('/ops/mark-3-complete', { truck_id }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jobs() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success(`Marked ${data.completed} stops as complete`);
     },
     onError: (error: Error) => {

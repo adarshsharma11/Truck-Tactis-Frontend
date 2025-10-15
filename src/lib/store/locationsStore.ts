@@ -1,22 +1,14 @@
+import { Location } from '@/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface SavedLocation {
-  id: string;
-  name: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-  is_starred: boolean;
-  last_used: string;
-}
 
 interface LocationsState {
-  locations: SavedLocation[];
-  addLocation: (location: Omit<SavedLocation, 'id' | 'last_used'>) => void;
+  locations: Location[];
+  addLocation: (location: Omit<Location, 'id' | 'last_used'>) => void;
   toggleStar: (id: string) => void;
   updateLastUsed: (id: string) => void;
-  getSortedLocations: () => SavedLocation[];
+  getSortedLocations: () => Location[];
 }
 
 export const useLocationsStore = create<LocationsState>()(
@@ -25,7 +17,7 @@ export const useLocationsStore = create<LocationsState>()(
       locations: [],
       
       addLocation: (location) => {
-        const newLocation: SavedLocation = {
+        const newLocation: Location = {
           ...location,
           id: `loc-${Date.now()}`,
           last_used: new Date().toISOString(),
@@ -65,7 +57,7 @@ export const useLocationsStore = create<LocationsState>()(
         const nonStarred = locations.filter(l => !l.is_starred);
         
         // Sort each group alphabetically by name
-        const sortAlpha = (a: SavedLocation, b: SavedLocation) => 
+        const sortAlpha = (a: Location, b: Location) => 
           a.name.localeCompare(b.name);
         
         starred.sort(sortAlpha);

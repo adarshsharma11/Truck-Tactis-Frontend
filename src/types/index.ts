@@ -4,29 +4,54 @@ export type TruckStatus = 'on_route' | 'idle' | 'at_yard' | 'offline';
 export type TruckType = 'large' | 'small';
 
 export interface Job {
-  id: string;
-  location_name: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-  action: JobAction;
-  items: string[]; // Item IDs
-  priority: number;
-  earliest?: string; // ISO time or null
-  latest?: string; // ISO time or null
-  service_minutes_override?: number;
-  notes?: string;
-  large_truck_only?: boolean;
-  capacity_hint?: number;
-  curfew_flag?: boolean;
-  truck_id?: string;
-  status: JobStatus;
-  date: string; // YYYY-MM-DD
-  estimated_arrival?: string;
-  sequence?: number; // order in the day
-  created_at: string;
-  updated_at: string;
+  id: number;
+  title: string;
+  actionType: string; // PICKUP, etc.
+  locationId: number;
+  priority: number; // 1: High, 2: Medium, 3: Low, etc.
+  earliestTime: string | null;
+  latestTime: string | null;
+  serviceMinutes: number | null;
+  notes: string | null;
+  largeTruckOnly: boolean;
+  curfewFlag: boolean;
+  assignedTruckId: number | null;
+  assignedDriverId: number | null;
+  isCompleted: boolean;
+  isFiction: boolean;
+  datePublished: string;
+  createdAt: string;
+  updatedAt: string;
+  location: Location;
+  items: Item[];
+  assignedTruck: string | null;
+  assignedDriver: string | null;
 }
+export interface JobResponse {
+  success: boolean;
+  data: {
+    total: number;
+    page: number;
+    limit: number;
+    jobs: Job[];
+  };
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  items: Item[];
+}
+
+// Main Response Interface
+export interface CategoryResponse {
+  success: boolean;
+  data: Category[];
+}
+
 export interface TruckApi {
   id?: number;
   truckName?: string;
@@ -96,6 +121,9 @@ export interface InventoryItemData {
   data: Item[];
 }
 export interface Location {
+  id?: string; // Optional
+  is_starred?: boolean; // Optional
+  last_used?: string; // Optional
   placeId: string;
   name: string;
   address: string;
@@ -105,20 +133,24 @@ export interface Location {
   state: string;
   country: string;
   postalCode: string;
-  isSaved: boolean;
-  createdById: string;
+  isSaved?: boolean;
+  createdById?: string | null;
 }
 
 export interface createJob {
   title: string;
-  actionType: "PICKUP" | "DELIVERY";  // Action type can be either PICKUP or DELIVERY
+  actionType: "PICKUP" | "DROPOFF";  // Action type can be either PICKUP or DELIVERY
   notes: string;
   priority: number;
+  curfewFlag: boolean;
   largeTruckOnly: boolean;
-  assignedTruckId: number;
-  assignedDriverId: number;
+  assignedTruckId: number | null;
+  assignedDriverId: number | null;
   items: number[];  // Array of item IDs
+  serviceMinutes: number | null;
   locationId: number | null;  // Location ID can be null if not assigned
+  earliestTime: string | null;
+  latestTime: string | null;
   location: Location;  // Location is required and contains detailed information
 }
 
@@ -135,10 +167,10 @@ export interface Item {
   categoryId: number | null;
   createdAt: string;  // ISO date string
   updatedAt: string;  // ISO date string
-  category: CategoryItem | null;  // Can be null or a Category object
+  category?: CategoryItem | null;  // Can be null or a Category object
 }
 export interface InventoryItem {
-  id?: string;
+  id?: number;
   name: string;
   size?: string;
   weight?: number;
@@ -161,7 +193,20 @@ export interface InventoryItem {
   requiresLargeTruck?: boolean,
   categoryId?: number | null
 }
+interface JobAssignment {
+  jobId: number;
+  jobTitle: string;
+  assignedTruck: string;
+  driver: string;
+  score: string;
+}
 
+export interface JobOptimize {
+  success: boolean;
+  totalJobs: number;
+  assigned: number;
+  assignments: JobAssignment[];
+}
 export interface InventoryNode extends InventoryItem {
   children: InventoryNode[];
 }
