@@ -28,7 +28,7 @@ export default function InventoryPage() {
   const [itemNotes, setItemNotes] = useState<string>('');
   const [itemLargeTruck, setItemLargeTruck] = useState(false);
   //categorie form state
-  const [categori, setCategori] = useState<null | number>(null);
+  const [category, setCategory] = useState<null | number>(null);
 
   // Truck form state
   const [truckName, setTruckName] = useState<string>('');
@@ -51,7 +51,7 @@ export default function InventoryPage() {
       return;
     }
 
-    if (categori === null) {
+    if (category === null) {
       createCategori.mutate({
         name: itemName,
         description: itemNotes,
@@ -67,11 +67,11 @@ export default function InventoryPage() {
       heightIn: itemHeight?parseFloat(itemHeight):null,
       notes: itemNotes || null,
       requiresLargeTruck: itemLargeTruck,
-      categoryId: categori || null
+      categoryId: category || null
     });
 
     // Reset form
-    setCategori(null)
+    setCategory(null)
     setItemName('');
     setItemSku('');
     setItemWeight('');
@@ -148,8 +148,8 @@ export default function InventoryPage() {
                   <div>
                     <Label className="text-sm font-medium">Categories</Label>
                     <select
-                      value={categori}
-                      onChange={(e) => setCategori(Number(e.target.value))} id="yearOfManufacture" name="yearOfManufacture"
+                      value={category}
+                      onChange={(e) => setCategory(Number(e.target.value))} id="yearOfManufacture" name="yearOfManufacture"
                       className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
                     >
                       <option value={null}>Select</option>

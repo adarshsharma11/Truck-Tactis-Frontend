@@ -8,9 +8,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
+import { Location } from '@/types';
 
 interface LocationSelectorProps {
-  onSelect: (name: string,  lat?: number, lng?: number) => void;
+  onSelect: (location:Location) => void;
 }
 
 export function LocationSelector({ onSelect }: LocationSelectorProps) {
@@ -28,7 +29,7 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
     : sortedLocations;
 
   const handleSelect = (loc: typeof sortedLocations[0]) => {    
-    onSelect(loc.name,  loc.lat, loc.lng);
+    // onSelect(loc.name,  loc.lat, loc.lng);
     updateLastUsed(loc.id);
     setOpen(false);
     setSearch('');
