@@ -294,7 +294,7 @@ export default function InventoryPage() {
                     className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
                   >
                     <option value="AVAILABLE">Available</option>
-                    <option value="ON DELIVERY">On Delivery</option>
+                    {/* <option value="ON DELIVERY">On Delivery</option> */}
                     <option value="IN_TRANSIT">In Transit</option>
                     <option value="MAINTENANCE">Maintenance</option>
                     <option value="UNAVAILABLE">Unavailable</option>

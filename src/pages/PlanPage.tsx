@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useDateStore } from '@/lib/store/dateStore';
 import { useLocationsStore } from '@/lib/store/locationsStore';
-import { useCategoriesWithItems, useCreateJob, useInventory, useJobOptimize, useJobs } from '@/lib/api/hooks';
+import { useCategoriesWithItems, useCreateJob, useInventory, useJobOptimize, useJobOptimizeRoute, useJobs } from '@/lib/api/hooks';
 import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
@@ -39,11 +39,14 @@ export default function PlanPage() {
 
   const createJob = useCreateJob();
   const optimizeMutation = useJobOptimize();
+  const optimizeMutationRoute = useJobOptimizeRoute();
   const { data: JobOptimizeData, isPending } = optimizeMutation;
+  const { data: JobOptimizeDataRoute, isPending: routeIsPending } = optimizeMutationRoute;
   const { addLocation } = useLocationsStore();
   const handleOptimizeClick = () => {
     optimizeMutation.mutate(); // ✅ No payload needed
   };
+
   const mapCenter = useMemo(() => ({ lat: 37.7749, lng: -122.4194 }), []);
   const mapZoom = useMemo(() => 12, []);
 
@@ -80,7 +83,7 @@ export default function PlanPage() {
   const [curfewFlag, setCurfewFlag] = useState<boolean>(false);
 
   const handleLocationSelect = (location: Location) => {
-     delete location.id
+    delete location.id
     setAddress(location.address);
     setLocation(location)
   };
@@ -105,7 +108,7 @@ export default function PlanPage() {
       toast.error('Please fill in Latest (time)');
       return;
     }
-   
+
 
     // // Save location with detailed address
     addLocation({
@@ -156,7 +159,9 @@ export default function PlanPage() {
     setLargeTruckOnly(false);
     setCurfewFlag(false);
   };
-
+  useEffect(() => {
+   optimizeMutationRoute.mutate();
+  }, [isPending]);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -359,7 +364,7 @@ export default function PlanPage() {
               apiKey={env.googleMapsApiKey}
               center={mapCenter}
               zoom={mapZoom}
-              jobs={job}
+              jobs={jobs}
             // trucks={mockTrucks}
             />
           </Card>
@@ -459,30 +464,37 @@ export default function PlanPage() {
                 )}
               </TabsContent>
               <TabsContent value="Optimize Routes" className="space-y-4">
-                {JobOptimizeData?.assignments?.length > 0 ? <div className="p-4">
+                {JobOptimizeDataRoute?.routes?.length > 0 ? <div className="p-4">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="-full">
                       <thead>
                         <tr className="border-b border-border text-left">
-                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Job ID</th>
-                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Job Title</th>
-                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Assigned Truck</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Truck ID</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Truck Name</th>
                           <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Driver</th>
-                          <th className="ppy-2 px-4 text-sm font-medium text-muted-foreground">Score</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Total Jobs</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Distance (km)</th>
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Stops</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {JobOptimizeData?.assignments?.map((job) => (
-                          <tr
-                            key={job.jobId}
-                            className="border-t hover:bg-gray-50 transition-colors duration-150"
-                          >
-                            <td className="py-3 px-4 text-gray-800">{job.jobId}</td>
-                            <td className="py-3 px-4">{job.jobTitle}</td>
-                            <td className="py-3 px-4">{job.assignedTruck}</td>
-                            <td className="py-3 px-4">{job.driver}</td>
-                            <td className="py-3 px-4 text-center font-semibold text-blue-600">
-                              {job.score}
+                        {JobOptimizeDataRoute?.routes?.map((truck, index) => (
+                          <tr key={index} className="border-b border-border hover:bg-muted/20">
+                            <td className="py-3 px-4 border-b">{truck.truckId}</td>
+                            <td className="py-3 px-4 border-b">{truck.truckName}</td>
+                            <td className="py-3 px-4 border-b">{truck.driver}</td>
+                            <td className="py-3 px-4 border-b">{truck.totalJobs}</td>
+                            <td className="py-3 px-4 border-b">
+                              {truck.route.distanceKm.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              <div className="">
+                                {truck.stops.map((stop, stopIndex) => (
+                                  <div key={stop.jobId} className="text-sm mb-1">
+                                    <span className="font-medium">{stopIndex+1}</span>: {stop.title}
+                                  </div>
+                                ))}
+                              </div>
                             </td>
                           </tr>
                         ))}

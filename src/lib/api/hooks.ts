@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob, JobResponse, CategoryResponse, JobOptimize } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob, JobResponse, CategoryResponse, JobOptimize, RouteResponse } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -40,6 +40,25 @@ export function useJobOptimize() {
         toast.info('No jobs for this day');
       } else {
         toast.success(`Optimized ${data?.assignments?.length} jobs successfully`);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to optimize jobs: ${error.message}`);
+    },
+  });
+}
+export function useJobOptimizeRoute() {
+  const queryClient = useQueryClient();
+  return useMutation<RouteResponse, Error, void>({
+    mutationFn: () => apiClient.post<RouteResponse>('api/jobs/routes'),
+    onSuccess: (data: RouteResponse) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+      
+      // Check if no jobs in response
+      if (!data.routes || data.routes.length === 0) {
+        toast.info('No jobs for this day');
+      } else {
+        toast.success(`Optimized ${data?.routes?.length} jobs successfully`);
       }
     },
     onError: (error: Error) => {
