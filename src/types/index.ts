@@ -24,9 +24,32 @@ export interface Job {
   updatedAt: string;
   location: Location;
   items: Item[];
-  assignedTruck: string | null;
+  assignedTruck?: AssignedTruck | null;
   assignedDriver: string | null;
 }
+export interface AssignedTruck {
+  id: number;
+  truckName: string;
+  capacityCuFt: number;
+  maxWeightLbs: number;
+  lengthFt: number;
+  widthFt: number;
+  heightFt: number;
+  truckType: string; // Add other possible values as needed
+  color: string;
+  yearOfManufacture: number;
+  isActive: boolean;
+  currentStatus:  string; // Expand as needed
+  restrictedLoadTypes: string[];
+  gpsEnabled: boolean;
+  lastKnownLat: number;
+  lastKnownLng: number;
+  driverId: number | null;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  driver: any | null; // You can replace `any` with a `Driver` interface if you have it
+}
+
 export interface JobResponse {
   success: boolean;
   data: {
@@ -120,6 +143,40 @@ export interface InventoryItemData {
   success: boolean;
   data: Item[];
 }
+
+// One stop in the truck's route
+export interface Stop {
+  jobId: number;
+  title: string;
+  lat: number;
+  lng: number;
+}
+
+// Route metadata for distance, duration, etc.
+export interface RouteDetails {
+  distanceKm: number;
+  durationMin: number | null;
+  polyline: string | null;
+  decoded: any; // You can define a type here if decoded is a list of coordinates
+}
+
+// A single truck's full route and job details
+export interface TruckRoute {
+  truckId: number;
+  truckName: string;
+  driver: string;
+  totalJobs: number;
+  stops: Stop[];
+  route: RouteDetails;
+}
+
+// Full API response
+export interface RouteResponse {
+  success: boolean;
+  totalTrucks: number;
+  routes: TruckRoute[];
+}
+
 export interface Location {
   id?: string; // Optional
   is_starred?: boolean; // Optional

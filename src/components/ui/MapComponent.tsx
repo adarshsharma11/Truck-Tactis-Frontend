@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import { JobResponse } from "@/types";
 
 // Truck type definition matching your project
 type TruckType = 'large' | 'small';
@@ -27,7 +28,7 @@ interface MapProps {
   center: google.maps.LatLngLiteral;
   zoom: number;
   trucks?: Truck[];
-  jobs?: any[];
+  jobs?: JobResponse;
 }
 
 // Mock truck data with different types and colors
@@ -76,18 +77,18 @@ const MapComponent: React.FC<MapProps> = ({ apiKey, center, zoom, trucks, jobs }
   const markersRef = useRef<google.maps.Marker[]>([]);
 
   // Truck color mapping
-  const getTruckColor = (type: TruckType, status: TruckStatus): string => {
+  const getTruckColor = (type: TruckType, status: string): string => {
     const statusColors = {
-      'on_route': { large: '#ef4444', small: '#f97316' }, // Red/Orange for active
-      'idle': { large: '#10b981', small: '#06b6d4' },     // Green/Cyan for available
-      'at_yard': { large: '#8b5cf6', small: '#a855f7' },  // Purple for at yard
-      'offline': { large: '#6b7280', small: '#9ca3af' }  // Gray for offline
+      'UNAVAILABLE': { large: '#ef4444', small: '#f97316' }, // Red/Orange for active
+      'AVAILABLE': { large: '#10b981', small: '#06b6d4' },     // Green/Cyan for available
+      'IN_TRANSIT': { large: '#8b5cf6', small: '#a855f7' },  // Purple for at yard
+      'MAINTENANCE': { large: '#6b7280', small: '#9ca3af' }  // Gray for offline
     };
     return statusColors[status][type];
   };
 
   // Truck icon SVG
-  const getTruckIcon = (type: TruckType, status: TruckStatus): google.maps.Symbol => {
+  const getTruckIcon = (type: TruckType, status: string): google.maps.Symbol => {
     const color = getTruckColor(type, status);
     const scale = type === 'large' ? 1.2 : 1.0;
     
@@ -150,33 +151,42 @@ const MapComponent: React.FC<MapProps> = ({ apiKey, center, zoom, trucks, jobs }
 
     const trucksToDisplay = trucks || createMockTrucks();
 
-    trucksToDisplay.forEach(truck => {
-      if (truck.current_location) {
+    // trucksToDisplay.forEach(truck => {
+    jobs?.data?.jobs?.forEach(truck => {
+      if (truck.assignedTruck) {
+        const type =truck.largeTruckOnly?"large":"small"
+        const truckName =truck.assignedTruck.truckName
         const marker = new google.maps.Marker({
-          position: truck.current_location,
+          position: { lat: truck.assignedTruck.lastKnownLat, lng: truck.assignedTruck.lastKnownLat },
           map: mapInstance.current!,
-          icon: getTruckIcon(truck.type, truck.status),
-          title: `${truck.name} (${truck.type.toUpperCase()})`
+          icon: getTruckIcon(type, truck.assignedTruck.currentStatus),
+          title: `${truck.assignedTruck.truckName} (${type.toUpperCase()})`
         });
 
         // Info window content
         const infoContent = `
           <div style="padding: 12px; min-width: 200px; font-family: Arial, sans-serif;color: black;">
             <div style="display: flex; align-items: center; margin-bottom: 8px;">
-              <div style="width: 16px; height: 16px; background-color: ${getTruckColor(truck.type, truck.status)}; border-radius: 50%; margin-right: 8px;"></div>
-              <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">${truck.name}</h3>
+              <div style="width: 16px; height: 16px; background-color: ${getTruckColor(type, truck.assignedTruck.currentStatus)}; border-radius: 50%; margin-right: 8px;"></div>
+              <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">${truckName}</h3>
             </div>
             <div style="margin-bottom: 6px;">
-              <strong>Type:</strong> ${truck.type.toUpperCase()} Truck
+              <strong>Type:</strong> ${type.toUpperCase()} Truck
             </div>
             <div style="margin-bottom: 6px;">
-              <strong>Status:</strong> ${truck.status.replace('_', ' ').toUpperCase()}
+              <strong>Job:</strong> ${truck.title} Truck
             </div>
             <div style="margin-bottom: 6px;">
-              <strong>Capacity:</strong> ${truck.capacity.toLocaleString()} cubic units
+              <strong>address:</strong> ${truck.location.address} Truck
             </div>
             <div style="margin-bottom: 6px;">
-              <strong>Dimensions:</strong> ${truck.dimensions.length}m × ${truck.dimensions.width}m × ${truck.dimensions.height}m
+              <strong>Status:</strong> ${truck.assignedTruck.currentStatus.replace('_', ' ').toUpperCase()}
+            </div>
+            <div style="margin-bottom: 6px;">
+              <strong>Capacity:</strong> ${truck.assignedTruck.capacityCuFt.toLocaleString()} cubic units
+            </div>
+            <div style="margin-bottom: 6px;">
+              <strong>Dimensions:</strong> ${truck.assignedTruck.lengthFt}m × ${truck.assignedTruck.widthFt}m × ${truck.assignedTruck.heightFt}m
             </div>
             <div style="font-size: 12px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
               Click for more details
