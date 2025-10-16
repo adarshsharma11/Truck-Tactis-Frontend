@@ -149,7 +149,7 @@ export interface createJob {
   items: number[];  // Array of item IDs
   serviceMinutes: number | null;
   locationId: number | null;  // Location ID can be null if not assigned
-  earliestTime: string | null;
+  earliestTime: string | null ;
   latestTime: string | null;
   location: Location;  // Location is required and contains detailed information
 }

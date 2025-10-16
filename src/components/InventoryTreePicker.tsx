@@ -46,9 +46,9 @@ export function InventoryTreePicker({
   const renderItemCategory = (item: Category, depth: number = 0,) => {
     const isExpanded = expandedIds.includes(item.id);
     // const isSelected = selectedIds.includes(item.id);
-    const hasChildren = item.items && item.items.length > 0;
+    const hasChildren = item?.items && item?.items?.length > 0;
 
-    const isCategory = item.items.length > 0 ? true : false // Check if it's a category (i.e., has items)
+    const isCategory = item?.items?.length > 0 ? true : false // Check if it's a category (i.e., has items)
 
 
 

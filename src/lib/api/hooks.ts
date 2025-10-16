@@ -241,7 +241,7 @@ export function useMark3Complete() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (truck_id: string) =>
+    mutationFn: (truck_id: number|string) =>
       apiClient.post<{ completed: number }>('/ops/mark-3-complete', { truck_id }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
@@ -255,7 +255,7 @@ export function useMark3Complete() {
 
 export function useSendNext3() {
   return useMutation({
-    mutationFn: ({ truck_id, webhook }: { truck_id: string; webhook?: string }) =>
+    mutationFn: ({ truck_id, webhook }: { truck_id: number; webhook?: string }) =>
       apiClient.post<{ success: boolean; message: string }>('/ops/send-next-3', { truck_id, webhook }),
     onSuccess: (data) => {
       toast.success(data.message);
