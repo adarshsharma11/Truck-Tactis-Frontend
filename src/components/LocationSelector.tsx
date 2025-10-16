@@ -29,7 +29,7 @@ export function LocationSelector({ onSelect }: LocationSelectorProps) {
     : sortedLocations;
 
   const handleSelect = (loc: typeof sortedLocations[0]) => {    
-    // onSelect(loc.name,  loc.lat, loc.lng);
+    onSelect(loc);
     updateLastUsed(loc.id);
     setOpen(false);
     setSearch('');

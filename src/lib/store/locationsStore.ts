@@ -19,8 +19,8 @@ export const useLocationsStore = create<LocationsState>()(
       addLocation: (location) => {
         const newLocation: Location = {
           ...location,
-          id: `loc-${Date.now()}`,
-          last_used: new Date().toISOString(),
+          // id: `loc-${Date.now()}`,
+          // last_used: new Date().toISOString(),
         };
         
         set((state) => {

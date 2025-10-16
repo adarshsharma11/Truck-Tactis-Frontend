@@ -16,12 +16,11 @@ import MapComponent from '@/components/ui/MapComponent';
 import { Autocomplete } from '@react-google-maps/api';
 import { env } from '@/config/env';
 import { useJobStore } from '@/lib/store/useJobStore';
-import { useInventoryStore } from '@/lib/store/useInventoryStore';
-import { JobOptimize, Location } from '@/types';
+import { Location } from '@/types';
 import { getPlaceDetails } from '@/components/getPlaceDetails ';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+import { useJobOptimizeStore } from '@/lib/store/useJobOptimizStore';
+
 
 export const queryKeys = {
   // jobs: (date?: string) => ['jobs', date] as const,
@@ -36,10 +35,10 @@ export default function PlanPage() {
   // const { data: inventory } = useInventory();
   const { data: inventory, isLoading: inventoryLoading } = useCategoriesWithItems();
 
-
+  const jobOptimize = useJobOptimizeStore((state) => state.jobOptimize);
 
   const createJob = useCreateJob();
-  const optimizeMutation  = useJobOptimize();
+  const optimizeMutation = useJobOptimize();
   const { data: JobOptimizeData, isPending } = optimizeMutation;
   const { addLocation } = useLocationsStore();
   const handleOptimizeClick = () => {
@@ -80,10 +79,10 @@ export default function PlanPage() {
   const [largeTruckOnly, setLargeTruckOnly] = useState<boolean>(false);
   const [curfewFlag, setCurfewFlag] = useState<boolean>(false);
 
-  const handleLocationSelect = (location:Location) => {
+  const handleLocationSelect = (location: Location) => {
+     delete location.id
     setAddress(location.address);
-
-
+    setLocation(location)
   };
 
   const handleCreateJob = () => {
@@ -94,30 +93,30 @@ export default function PlanPage() {
       toast.error('Please select at least one item');
       return;
     }
-     else if (!address) {
+    else if (!address) {
       toast.error('Please fill in address');
       return;
     }
-     else if (earliest==="") {
+    else if (earliest === "") {
       toast.error('Please fill in Earliest (time)');
       return;
     }
-     else if (latest==="") {
+    else if (latest === "") {
       toast.error('Please fill in Latest (time)');
       return;
     }
-
+   
 
     // // Save location with detailed address
     addLocation({
       ...location
     });
-const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
     // Create job
     createJob.mutate({
       title: title,
       actionType: action,
-      notes: notes || null,
+      notes: notes || "",
       priority: parseInt(priority) || 1,
       largeTruckOnly: largeTruckOnly,
       // assignedTruckId: null,
@@ -125,8 +124,8 @@ const today = new Date().toISOString().split('T')[0];
       items: selectedItems,
       // locationId: null,
       location: location,
-      earliestTime : new Date(`${today}T${earliest}:00`).toString() || "",
-       latestTime  : new Date(`${today}T${latest}:00`).toString()  || "",
+      earliestTime: new Date(`${today}T${earliest}:00`).toString() || "",
+      latestTime: new Date(`${today}T${latest}:00`).toString() || "",
       serviceMinutes: serviceMinutes ? parseInt(serviceMinutes) : null,
       curfewFlag: curfewFlag,
       // date: selectedDate,
@@ -408,9 +407,9 @@ const today = new Date().toISOString().split('T')[0];
                       <tbody>
                         {jobs?.data?.jobs?.map((job, idx) => {
                           const earliest = new Date(job.earliestTime);
-                          const earliestTime = earliest.toISOString().split("T")[1].slice(0, 5)==='00:00'?"-":earliest.toISOString().split("T")[1].slice(0, 5);
-                          const latest = new Date(job.latestTime);                          
-                           const latestTime = latest.toISOString().split("T")[1].slice(0, 5)==='00:00'?'-':latest.toISOString().split("T")[1].slice(0, 5);
+                          const earliestTime = earliest.toISOString().split("T")[1].slice(0, 5) === '00:00' ? "-" : earliest.toISOString().split("T")[1].slice(0, 5);
+                          const latest = new Date(job.latestTime);
+                          const latestTime = latest.toISOString().split("T")[1].slice(0, 5) === '00:00' ? '-' : latest.toISOString().split("T")[1].slice(0, 5);
                           return <tr key={job.id} className="border-b border-border hover:bg-muted/20">
                             <td className="py-3 px-4 text-sm">{idx + 1}</td>
                             <td className="py-3 px-4 text-sm font-medium">{job.title}</td>
@@ -453,7 +452,7 @@ const today = new Date().toISOString().split('T')[0];
                           </span>
                         </td> */}
                           </tr>
-})}
+                        })}
                       </tbody>
                     </table>
                   </div>
