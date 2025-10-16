@@ -7,16 +7,17 @@ import { env } from '@/config/env';
 
 export default function OpsPage() {
   const { selectedDate } = useDateStore();
-  const { data: jobs } = useJobs(selectedDate);
+  const { data: jobs } = useJobs();
+  // const { data: jobs } = useJobs(selectedDate);
   const { data: trucks } = useTrucks();
   const mark3Complete = useMark3Complete();
   const sendNext3 = useSendNext3();
 
   // Group jobs by truck and into groups of 3
-  const truckStops = trucks?.map(truck => {
-    const truckJobs = jobs
-      ?.filter(j => j.truck_id === truck.id)
-      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0)) || [];
+  const truckStops = trucks?.data?.map(truck => {
+    const truckJobs = jobs?.data?.jobs
+      ?.filter(j => j.id === truck.id)
+      .sort((a, b) => (a.priority || 0) - (b.priority || 0)) || [];
     
     const groups: { group_number: number; stops: typeof truckJobs; is_completed: boolean }[] = [];
     for (let i = 0; i < truckJobs.length; i += 3) {
@@ -24,18 +25,18 @@ export default function OpsPage() {
       groups.push({
         group_number: Math.floor(i / 3) + 1,
         stops: groupStops,
-        is_completed: groupStops.every(s => s.status === 'completed'),
+        is_completed: groupStops.every(s => s.isCompleted === true),
       });
     }
     
     return { truck, groups };
   }) || [];
 
-  const handleMark3Complete = (truckId: string) => {
+  const handleMark3Complete = (truckId: number |string) => {
     mark3Complete.mutate(truckId);
   };
 
-  const handleSendNext3 = (truckId: string) => {
+  const handleSendNext3 = (truckId: number) => {
     sendNext3.mutate({ truck_id: truckId, webhook: env.webhookNext3Url });
   };
 
@@ -60,23 +61,23 @@ export default function OpsPage() {
               {/* Truck Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-lg">{truck.name}</h3>
+                  <h3 className="font-semibold text-lg">{truck.truckName}</h3>
                   <p className={`text-sm font-medium mt-1 ${
-                    truck.status === 'on_route' 
+                    truck.currentStatus === 'AVAILABLE' 
                       ? 'text-primary'
-                      : truck.status === 'idle'
+                      : truck.currentStatus === 'UNAVAILABLE'
                       ? 'text-warning'
                       : 'text-muted-foreground'
                   }`}>
-                    {truck.status.replace('_', ' ').toUpperCase()}
+                    {truck.currentStatus.replace('_', ' ').toUpperCase()}
                   </p>
                 </div>
-                {truck.curfew_flags && truck.curfew_flags.length > 0 && (
+                {/* {truck.curfew_flags && truck.curfew_flags.length > 0 && (
                   <div className="flex items-center gap-1 text-warning">
                     <AlertCircle className="w-4 h-4" />
                     <span className="text-xs">Curfew</span>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Stop Groups */}
@@ -110,13 +111,13 @@ export default function OpsPage() {
                         {group.stops.map((stop, idx) => (
                           <div key={stop.id} className="text-xs flex items-center gap-2">
                             <span className="text-muted-foreground">{idx + 1}.</span>
-                            <span className="flex-1 truncate">{stop.location_name}</span>
+                            <span className="flex-1 truncate">{stop.location.address}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                              stop.action === 'pickup'
+                              stop.actionType === 'PICKUP'
                                 ? 'bg-accent/20 text-accent'
                                 : 'bg-warning/20 text-warning'
                             }`}>
-                              {stop.action}
+                              {stop.actionType}
                             </span>
                           </div>
                         ))}

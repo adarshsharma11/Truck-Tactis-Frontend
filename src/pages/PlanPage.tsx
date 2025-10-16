@@ -87,14 +87,23 @@ export default function PlanPage() {
   };
 
   const handleCreateJob = () => {
-    if (!address && selectedItems.length === 0) {
+    if (!address && selectedItems?.length === 0) {
       toast.error('Please fill in location, address, and select at least one item');
       return;
-    } else if (selectedItems.length === 0) {
+    } else if (selectedItems?.length === 0) {
       toast.error('Please select at least one item');
       return;
-    } else if (!address) {
+    }
+     else if (!address) {
       toast.error('Please fill in address');
+      return;
+    }
+     else if (earliest==="") {
+      toast.error('Please fill in Earliest (time)');
+      return;
+    }
+     else if (latest==="") {
+      toast.error('Please fill in Latest (time)');
       return;
     }
 
@@ -103,7 +112,7 @@ export default function PlanPage() {
     addLocation({
       ...location
     });
-
+const today = new Date().toISOString().split('T')[0];
     // Create job
     createJob.mutate({
       title: title,
@@ -116,8 +125,8 @@ export default function PlanPage() {
       items: selectedItems,
       // locationId: null,
       location: location,
-      earliestTime: earliest || "",
-      latestTime: latest || "null",
+      earliestTime : new Date(`${today}T${earliest}:00`).toString() || "",
+       latestTime  : new Date(`${today}T${latest}:00`).toString()  || "",
       serviceMinutes: serviceMinutes ? parseInt(serviceMinutes) : null,
       curfewFlag: curfewFlag,
       // date: selectedDate,
@@ -236,7 +245,7 @@ export default function PlanPage() {
             {/* Items Selection */}
             <div>
               <Label className="text-sm font-medium">
-                Items ({selectedItems.length} selected)
+                Items ({selectedItems?.length} selected)
               </Label>
               <div className="mt-2">
                 {inventory && inventory?.data?.length > 0 ? (
@@ -397,8 +406,12 @@ export default function PlanPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {jobs?.data?.jobs?.map((job, idx) => (
-                          <tr key={job.id} className="border-b border-border hover:bg-muted/20">
+                        {jobs?.data?.jobs?.map((job, idx) => {
+                          const earliest = new Date(job.earliestTime);
+                          const earliestTime = earliest.toISOString().split("T")[1].slice(0, 5)==='00:00'?"-":earliest.toISOString().split("T")[1].slice(0, 5);
+                          const latest = new Date(job.latestTime);                          
+                           const latestTime = latest.toISOString().split("T")[1].slice(0, 5)==='00:00'?'-':latest.toISOString().split("T")[1].slice(0, 5);
+                          return <tr key={job.id} className="border-b border-border hover:bg-muted/20">
                             <td className="py-3 px-4 text-sm">{idx + 1}</td>
                             <td className="py-3 px-4 text-sm font-medium">{job.title}</td>
                             <td className="py-3 px-4 text-sm font-medium">{job.location.address}</td>
@@ -415,12 +428,12 @@ export default function PlanPage() {
                               {job?.items?.length} items
                             </td>
                             <td className="py-3 px-4 text-sm text-muted-foreground">
-                              {job.earliestTime && job.latestTime
-                                ? `${job.earliestTime} - ${job.latestTime}`
-                                : job.earliestTime
-                                  ? `From ${job.earliestTime}`
-                                  : job.latestTime
-                                    ? `Until ${job.latestTime}`
+                              {earliestTime && latestTime
+                                ? `${earliestTime} - ${latestTime}`
+                                : earliestTime
+                                  ? `From ${earliestTime}`
+                                  : latestTime
+                                    ? `Until ${latestTime}`
                                     : '—'}
                             </td>
                             <td className="py-3 px-4 text-sm">{job.priority === 1 ? "High" : job.priority === 1 ? "Medium" : "Low"}</td>
@@ -440,7 +453,7 @@ export default function PlanPage() {
                           </span>
                         </td> */}
                           </tr>
-                        ))}
+})}
                       </tbody>
                     </table>
                   </div>
