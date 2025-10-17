@@ -507,7 +507,7 @@ export default function PlanPage() {
                               </div>
                             </td>
                              <td className="py-3 px-4 border-b">
-                              <button onClick={() => window.open(truck.googleMapsUrl, "_blank")} className="bg-primary text-white font-bold py-2 px-4 rounded">View Route</button>
+                              <button onClick={() => window.open(truck.googleMapsUrl, "_blank")} className="bg-primary text-white font-bold py-2 px-4 rounded">View</button>
                             </td>
                           </tr>
                         ))}
