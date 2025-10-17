@@ -59,6 +59,7 @@ export default function PlanPage() {
   };
   // Form state
   const [address, setAddress] = useState<string>('');
+  const [tabsListValue, setTabsListValue] = useState<string>('jobs');
   const [title, setTitle] = useState<string>('');
   const [action, setAction] = useState<'PICKUP' | 'DROPOFF'>('PICKUP');
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
@@ -167,6 +168,7 @@ export default function PlanPage() {
     await JobDelete.mutate(id)
     refetch()
   }
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -370,6 +372,7 @@ export default function PlanPage() {
               center={mapCenter}
               zoom={mapZoom}
               jobs={jobs}
+              tabsListValue={tabsListValue}
             // trucks={mockTrucks}
             />
           </Card>
@@ -388,7 +391,9 @@ export default function PlanPage() {
                 Optimize Routes
               </Button>
             </div>
-            <Tabs defaultValue="jobs" className="w-full">
+            <Tabs onValueChange={(e)=>{
+                setTabsListValue(e)
+              }} defaultValue="jobs" value={tabsListValue} className="w-full">
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="jobs">Job</TabsTrigger>
                 <TabsTrigger value="Optimize Routes"> View Assigned Routes</TabsTrigger>
