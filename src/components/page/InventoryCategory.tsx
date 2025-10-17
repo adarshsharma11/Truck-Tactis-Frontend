@@ -141,7 +141,7 @@ export default function InventoryCategoriesPanel({ categories }: { categories?: 
               <select
                 value={parentId ?? ''}
                 onChange={e => setParentId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-3 py-2 border border-border rounded-md text-sm"
+                className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background text-white"
               >
                 <option value="">— Root —</option>
                 {flat.map(({ node, depth }) => (
