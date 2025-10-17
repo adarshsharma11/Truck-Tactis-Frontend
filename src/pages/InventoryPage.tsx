@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InventoryCategory from '@/components/page/InventoryCategory';
 import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCategori, useDeleteTruck } from '@/lib/api/hooks';
 import { toast } from 'sonner';
 import { restMaterial } from '@/utils/contants';
@@ -134,11 +135,14 @@ export default function InventoryPage() {
       <h2 className="text-2xl font-bold">Inventory & Fleet</h2>
 
       <Tabs defaultValue="inventory" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="category">Category</TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
         </TabsList>
-
+          <TabsContent value="category" className="space-y-4">
+            <InventoryCategory />
+          </TabsContent>
         <TabsContent value="inventory" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Add Item Form */}
