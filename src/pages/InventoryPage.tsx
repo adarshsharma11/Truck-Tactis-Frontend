@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InventoryCategory from '@/components/page/InventoryCategory';
-import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCategori, useDeleteTruck } from '@/lib/api/hooks';
+import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCreateCategory, useDeleteTruck, useDeleteCategory } from '@/lib/api/hooks';
 import { toast } from 'sonner';
 import { restMaterial } from '@/utils/contants';
 
@@ -20,7 +20,9 @@ export default function InventoryPage() {
   const truckDelete = useDeleteTruck();
   const { data, isPending: deletePending } = truckDelete;
   const createItem = useCreateInventoryItem();
-  const createCategori = useCategori();
+  const deleteCategory = useDeleteCategory();
+  const { isPending: categoryDeletePending } = deleteCategory;
+  const createCategory = useCreateCategory();
   const createTruck = useCreateTruck();
   const [itemName, setItemName] = useState<string>('');
   const [itemSku, setItemSku] = useState<string>('');
@@ -55,7 +57,7 @@ export default function InventoryPage() {
     }
 
     if (category === null) {
-      createCategori.mutate({
+      createCategory.mutate({
         name: itemName,
         description: itemNotes,
       });
@@ -130,6 +132,11 @@ export default function InventoryPage() {
     await truckDelete.mutate(id)
     refetch()
   }
+
+  const handleDeleteCategory = async (id: number) => {
+    await deleteCategory.mutate(id)
+    refetch()
+  }
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Inventory & Fleet</h2>
@@ -141,7 +148,7 @@ export default function InventoryPage() {
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
         </TabsList>
           <TabsContent value="category" className="space-y-4">
-            <InventoryCategory categories={categories?.data} />
+            <InventoryCategory categories={categories?.data} handleDeleteCategory={handleDeleteCategory} categoryDeletePending={categoryDeletePending} />
           </TabsContent>
         <TabsContent value="inventory" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

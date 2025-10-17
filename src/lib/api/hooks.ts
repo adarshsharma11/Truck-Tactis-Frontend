@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, addCategory, InventoryItemData, createJob, JobResponse, CategoryResponse, JobOptimize, RouteResponse } from '@/types';
+import type { Job, Truck, InventoryItem, Metrics, TruckData, TruckApi, Category, AddCategory, InventoryItemData, createJob, JobResponse, CategoryResponse, JobOptimize, RouteResponse } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -112,6 +112,21 @@ export function useDeleteJob() {
   });
 }
 
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete(`api/categories/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.Category });
+      toast.success('Category deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete job: ${error.message}`);
+    },
+  });
+}
+
 export function useDeferJob() {
   const queryClient = useQueryClient();
 
@@ -204,18 +219,18 @@ export function useCategoriesWithItems() {
   });
 }
 
-export function useCategori() {
+export function useCreateCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<addCategory>) =>
-      apiClient.post<addCategory>('api/categories', data),
-    onSuccess: () => {
+    mutationFn: (data: Partial<AddCategory>) =>
+      apiClient.post<AddCategory>('api/categories', data),
+    onSuccess: () => {  
       queryClient.invalidateQueries({ queryKey: queryKeys.Category });
-      // toast.success('Item created');
+      toast.success('Category created');
     },
     onError: (error: Error) => {
-      toast.error(`Failed to create item: ${error.message}`);
+      toast.error(`Failed to create category: ${error.message}`);
     },
   });
 }

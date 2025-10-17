@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useCreateCategory } from '@/lib/api/hooks';
+import { toast } from 'sonner';
 
 // Type
 interface Category {
@@ -14,8 +16,9 @@ interface Category {
   children?: Category[];
 }
 
-export default function InventoryCategoriesPanel({ categories }: { categories?: Category[] }) {
-  const [tree, setTree] = useState<Category[]>(categories);
+export default function InventoryCategory({ categories, handleDeleteCategory, categoryDeletePending }: { categories?: Category[]; handleDeleteCategory: (id: number) => void; categoryDeletePending: boolean }) {
+  const [tree, setTree] = useState<Category[]>(categories || []);
+  const createCategory = useCreateCategory();
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   const [name, setName] = useState('');
@@ -38,9 +41,9 @@ export default function InventoryCategoriesPanel({ categories }: { categories?: 
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async(e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return alert('Please enter a name');
+    if (!name.trim()) return toast.error('Please enter a name');
     const newCat: Category = {
       id: Date.now(),
       name,
@@ -48,23 +51,37 @@ export default function InventoryCategoriesPanel({ categories }: { categories?: 
       parentId,
       children: [],
     };
-    if (!parentId) {
-      setTree(prev => [...prev, newCat]);
-    } else {
-      const addChild = (list: Category[]): Category[] =>
-        list.map(cat =>
-          cat.id === parentId
-            ? { ...cat, children: [...(cat.children || []), newCat] }
-            : { ...cat, children: addChild(cat.children || []) }
-        );
-      setTree(prev => addChild(prev));
+    try {
+      await createCategory.mutateAsync({
+        name: newCat.name,
+        description: newCat.description,
+        parentId: newCat.parentId,
+      });
+      if (!parentId) {
+        setTree(prev => [...prev, newCat]);
+      } else {
+        const addChild = (list: Category[]): Category[] =>
+          list.map(cat =>
+            cat.id === parentId
+              ? { ...cat, children: [...(cat.children || []), newCat] }
+              : { ...cat, children: addChild(cat.children || []) }
+          );
+        setTree(prev => addChild(prev));
+      }
+      setName('');
+      setDescription('');
+      setParentId(null);
+    } catch (error) {
+      toast.error('Failed to create category');
+      return;
     }
     setName('');
     setDescription('');
     setParentId(null);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
+    await handleDeleteCategory(id);
     const removeNode = (nodes: Category[]): Category[] =>
       nodes
         .filter(n => n.id !== id)
@@ -108,6 +125,7 @@ export default function InventoryCategoriesPanel({ categories }: { categories?: 
               size="sm"
               onClick={() => handleDelete(node.id)}
               className="text-xs px-2 py-1"
+              disabled={categoryDeletePending}
             >
               Delete
             </Button>
@@ -152,7 +170,7 @@ export default function InventoryCategoriesPanel({ categories }: { categories?: 
                 ))}
               </select>
             </div>
-            <Button type="submit" className="w-full">Add Category</Button>
+            <Button type="submit" className="w-full" disabled={createCategory.isPending}>Add Category</Button>
           </form>
         </Card>
 

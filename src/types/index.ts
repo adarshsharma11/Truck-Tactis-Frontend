@@ -122,9 +122,10 @@ export interface Truck {
   };
 }
 
-export interface addCategory {
+export interface AddCategory {
   name: string;
   description: string;
+  parentId?: number | null;
 }
 export interface Category {
   success: boolean;
