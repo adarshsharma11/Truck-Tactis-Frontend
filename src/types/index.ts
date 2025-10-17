@@ -168,6 +168,7 @@ export interface TruckRoute {
   totalJobs: number;
   stops: Stop[];
   route: RouteDetails;
+  googleMapsUrl: string;
 }
 
 // Full API response
