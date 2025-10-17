@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import CategorySelect from '@/components/ui/custom/SelectCategory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InventoryCategory from '@/components/page/InventoryCategory';
 import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCreateCategory, useDeleteTruck, useDeleteCategory } from '@/lib/api/hooks';
@@ -160,22 +161,10 @@ export default function InventoryPage() {
                   <Label>Name</Label>
                   <Input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Item name" className="mt-2" />
                 </div>
-                {inventory?.data?.length > 0 ?
+                {categories?.data?.length > 0 &&
                   <div>
-                    <Label className="text-sm font-medium">Categories</Label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(Number(e.target.value))} id="yearOfManufacture" name="yearOfManufacture"
-                      className="w-full mt-2 px-3 py-2 bg-input border border-border rounded-md text-sm"
-                    >
-                      <option value={null}>Select</option>
-                      {
-                        categories?.data?.map((val, i) => (
-                          <option value={val.id}>{val.name}</option>
-                        ))
-                      }
-                    </select>
-                  </div> : null}
+                    <CategorySelect category={category} setCategory={setCategory} />
+                  </div>}
                 <div>
                   <Label>SKU</Label>
                   <Input value={itemSku} onChange={(e) => setItemSku(e.target.value)} placeholder="Optional" className="mt-2" />
