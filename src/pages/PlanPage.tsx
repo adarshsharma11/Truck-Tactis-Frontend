@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useDateStore } from '@/lib/store/dateStore';
 import { useLocationsStore } from '@/lib/store/locationsStore';
-import { useCategoriesWithItems, useCreateJob, useInventory, useJobOptimize, useJobOptimizeRoute, useJobs } from '@/lib/api/hooks';
+import { useCategoriesWithItems, useCreateJob, useDeleteJob, useInventory, useJobOptimize, useJobOptimizeRoute, useJobs } from '@/lib/api/hooks';
 import { InventoryTreePicker } from '@/components/InventoryTreePicker';
 import { LocationSelector } from '@/components/LocationSelector';
 import { toast } from 'sonner';
@@ -29,19 +29,20 @@ export const queryKeys = {
 };
 
 export default function PlanPage() {
-  const { data: jobs, isLoading: jobsLoading } = useJobs();
+  const { data: jobs, isLoading: jobsLoading, refetch } = useJobs();
   const { selectedDate } = useDateStore();
   const { job } = useJobStore(state => state);
   // const { data: inventory } = useInventory();
   const { data: inventory, isLoading: inventoryLoading } = useCategoriesWithItems();
 
-  const jobOptimize = useJobOptimizeStore((state) => state.jobOptimize);
 
   const createJob = useCreateJob();
+  const JobDelete = useDeleteJob();
   const optimizeMutation = useJobOptimize();
   const optimizeMutationRoute = useJobOptimizeRoute();
   const { data: JobOptimizeData, isPending } = optimizeMutation;
   const { data: JobOptimizeDataRoute, isPending: routeIsPending } = optimizeMutationRoute;
+  const { data, isPending: deletePending } = JobDelete;
   const { addLocation } = useLocationsStore();
   const handleOptimizeClick = () => {
     optimizeMutation.mutate(); // ✅ No payload needed
@@ -160,8 +161,12 @@ export default function PlanPage() {
     setCurfewFlag(false);
   };
   useEffect(() => {
-   optimizeMutationRoute.mutate();
+    optimizeMutationRoute.mutate();
   }, [isPending]);
+  const deleteJob = async (id: number) => {
+    await JobDelete.mutate(id)
+    refetch()
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -385,7 +390,7 @@ export default function PlanPage() {
             </div>
             <Tabs defaultValue="jobs" className="w-full">
               <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="jobs">Inventory</TabsTrigger>
+                <TabsTrigger value="jobs">Job</TabsTrigger>
                 <TabsTrigger value="Optimize Routes"> View Assigned Routes</TabsTrigger>
               </TabsList>
               <TabsContent value="jobs" className="space-y-4">
@@ -406,7 +411,7 @@ export default function PlanPage() {
                           <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Items</th>
                           <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Time Window</th>
                           <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Priority</th>
-                          {/* <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Status</th> */}
+                          <th className="py-2 px-4 text-sm font-medium text-muted-foreground">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -441,6 +446,10 @@ export default function PlanPage() {
                                     : '—'}
                             </td>
                             <td className="py-3 px-4 text-sm">{job.priority === 1 ? "High" : job.priority === 1 ? "Medium" : "Low"}</td>
+                            <td className="py-3 px-4 text-sm"><Button
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4" disabled={deletePending} onClick={() => deleteJob(job.id)}>
+                              Delete
+                            </Button></td>
                             {/* <td className="py-3 px-4">
                           <span className={`text-xs px-2 py-1 rounded-full ${job.status === 'completed'
                             ? 'bg-success/20 text-success'
@@ -491,7 +500,7 @@ export default function PlanPage() {
                               <div className="">
                                 {truck.stops.map((stop, stopIndex) => (
                                   <div key={stop.jobId} className="text-sm mb-1">
-                                    <span className="font-medium">{stopIndex+1}</span>: {stop.title}
+                                    <span className="font-medium">{stopIndex + 1}</span>: {stop.title}
                                   </div>
                                 ))}
                               </div>

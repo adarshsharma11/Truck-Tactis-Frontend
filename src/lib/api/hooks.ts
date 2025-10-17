@@ -58,7 +58,7 @@ export function useJobOptimizeRoute() {
       if (!data.routes || data.routes.length === 0) {
         toast.info('No jobs for this day');
       } else {
-        toast.success(`Optimized ${data?.routes?.length} jobs successfully`);
+        // toast.success(`Optimized ${data?.routes?.length} jobs successfully`);
       }
     },
     onError: (error: Error) => {
@@ -101,7 +101,7 @@ export function useDeleteJob() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => apiClient.delete(`/jobs/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`api/jobs/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job deleted');
@@ -135,7 +135,20 @@ export function useTrucks() {
     queryFn: () => apiClient.get<TruckData>('api/trucks'),
   });
 }
+export function useDeleteTruck() {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete(`api/trucks/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trucks });
+      toast.success('Truck deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete trucks: ${error.message}`);
+    },
+  });
+}
 export function useUpdateTruck() {
   const queryClient = useQueryClient();
 

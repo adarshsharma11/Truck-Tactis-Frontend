@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,15 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCategori } from '@/lib/api/hooks';
+import { useInventory, useTrucks, useCreateInventoryItem, useCreateTruck, useCategories, useCategori, useDeleteTruck } from '@/lib/api/hooks';
 import { toast } from 'sonner';
 import { restMaterial } from '@/utils/contants';
 
 
 export default function InventoryPage() {
   const { data: inventory, isLoading: inventoryLoading } = useInventory();
-  const { data: trucks, isLoading: trucksLoading } = useTrucks();
+  const { data: trucks, isLoading: trucksLoading, refetch } = useTrucks();
   const { data: categories, isLoading: CategoriesLoading } = useCategories();
+  const truckDelete = useDeleteTruck();
+  const { data, isPending: deletePending } = truckDelete;
   const createItem = useCreateInventoryItem();
   const createCategori = useCategori();
   const createTruck = useCreateTruck();
@@ -57,14 +59,14 @@ export default function InventoryPage() {
         description: itemNotes,
       });
     }
- 
+
     createItem.mutate({
       name: itemName,
       sku: itemSku || null,
       weightLbs: itemWeight ? parseFloat(itemWeight) : null,
-      lengthIn: itemLength?parseFloat(itemLength):null,
-      widthIn: itemWidth?parseFloat(itemWidth):null,
-      heightIn: itemHeight?parseFloat(itemHeight):null,
+      lengthIn: itemLength ? parseFloat(itemLength) : null,
+      widthIn: itemWidth ? parseFloat(itemWidth) : null,
+      heightIn: itemHeight ? parseFloat(itemHeight) : null,
       notes: itemNotes || null,
       requiresLargeTruck: itemLargeTruck,
       categoryId: category || null
@@ -123,7 +125,10 @@ export default function InventoryPage() {
     setTruckIsLarge(false);
     setyearOfManufacture(2022)
   };
-
+  const deleteTruck = async (id: number) => {
+    await truckDelete.mutate(id)
+    refetch()
+  }
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Inventory & Fleet</h2>
@@ -344,6 +349,15 @@ export default function InventoryPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {trucks?.data?.map((truck) => (
                       <div key={truck.id} className="p-4 border border-border rounded-md hover:bg-muted/20">
+                        <div className="flex pb-4">
+                          <Button
+                            className="bg-red-500 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center ml-auto"
+                            onClick={() => deleteTruck(truck.id)}
+                            disabled={deletePending}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <h4 className="font-semibold">{truck?.truckName}</h4>
@@ -374,6 +388,7 @@ export default function InventoryPage() {
                                 {truck?.currentStatus}
                               </span>
                             </div>
+
                           </div>
                         </div>
                       </div>
