@@ -5,101 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-// Static mock data for preview
-const mockCategories = [
-  {
-    id: 7,
-    name: 'Heavy Load Test',
-    description: 'Heavy loading Items',
-    parentId: null,
-    children: [
-      {
-        id: 10,
-        name: 'Heavy machine test',
-        description: 'Heavy loading Items',
-        parentId: 7,
-        children: [
-          {
-            id: 11,
-            name: 'samsung machine test',
-            description: 'Heavy loading Items',
-            parentId: 10,
-            children: [
-                {
-                    id: 12,
-                    name: 'samsung machine test 2',
-                    description: 'Heavy loading Items',
-                    parentId: 11,
-                    children: [
-                        {
-                            id: 13,
-                            name: 'samsung machine test 3',
-                            description: 'Heavy loading Items',
-                            parentId: 12,
-                            children: [
-                                {
-                                    id: 14,
-                                    name: 'samsung machine test 4',
-                                    description: 'Heavy loading Items',
-                                    parentId: 13,
-                                    children: [],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Plastic containers',
-    description: 'Plastic containers',
-    parentId: null,
-    children: [],
-  },
-  {
-    id: 3,
-    name: 'Heavy machinery parts',
-    description: 'Heavy machinery parts',
-    parentId: null,
-    children: [],
-  },
-  {
-    id: 2,
-    name: 'Light Items',
-    description: 'Light loading Items',
-    parentId: null,
-    children: [],
-  },
-  {
-    id: 1,
-    name: 'Heavy Load',
-    description: 'Heavy loading Items',
-    parentId: null,
-    children: [
-      {
-        id: 5,
-        name: 'Vending Machines',
-        description: 'Vending machines category',
-        parentId: 1,
-        children: [
-          {
-            id: 6,
-            name: 'Vegan Vending Machines',
-            description: 'Vegan Vending Machines',
-            parentId: 5,
-            children: [],
-          },
-        ],
-      },
-    ],
-  },
-];
-
 // Type
 interface Category {
   id: number;
@@ -109,8 +14,8 @@ interface Category {
   children?: Category[];
 }
 
-export default function InventoryCategoriesPanel() {
-  const [tree, setTree] = useState<Category[]>(mockCategories);
+export default function InventoryCategoriesPanel({ categories }: { categories?: Category[] }) {
+  const [tree, setTree] = useState<Category[]>(categories);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   const [name, setName] = useState('');

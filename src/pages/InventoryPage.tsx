@@ -141,7 +141,7 @@ export default function InventoryPage() {
           <TabsTrigger value="fleet">Fleet</TabsTrigger>
         </TabsList>
           <TabsContent value="category" className="space-y-4">
-            <InventoryCategory />
+            <InventoryCategory categories={categories?.data} />
           </TabsContent>
         <TabsContent value="inventory" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

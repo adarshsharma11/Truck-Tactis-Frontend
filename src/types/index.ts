@@ -131,12 +131,12 @@ export interface Category {
   data: CategoryItem[];
 }
 
-export interface CategoryItem {
+interface CategoryItem {
   id: number;
   name: string;
   description: string;
-  createdAt: string;  // ISO date string
-  updatedAt: string;  // ISO date string
+  parentId: number | null;
+  children?: CategoryItem[];
 }
 
 export interface InventoryItemData {
