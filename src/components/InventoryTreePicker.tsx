@@ -41,16 +41,12 @@ export function InventoryTreePicker({
       onSelectionChange([...selectedIds, id,]);
     }
   };
-
   // Render function for individual items (both categories and items)
-  const renderItemCategory = (item: Category, depth: number = 0,) => {
+  const renderItemCategory = (item: Category, depth: number = 0) => {
     const isExpanded = expandedIds.includes(item.id);
-    // const isSelected = selectedIds.includes(item.id);
-    const hasChildren = item?.items && item?.items?.length > 0;
-
-    const isCategory = item?.items?.length > 0 ? true : false // Check if it's a category (i.e., has items)
-
-
+    const hasChildren =
+      (item.children && item.children.length > 0) ||
+      (item.items && item.items.length > 0);
 
     return (
       <div key={item.id}>
@@ -58,7 +54,6 @@ export function InventoryTreePicker({
           className="flex items-center gap-2 py-2 px-2 hover:bg-muted/50 rounded-md cursor-pointer"
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          {/* Expand/Collapse Button for categories */}
           {hasChildren ? (
             <button
               onClick={() => toggleExpand(item.id)}
@@ -74,23 +69,7 @@ export function InventoryTreePicker({
             <span className="w-4 h-4" />
           )}
 
-          {/* Checkbox for selecting items */}
-          {/* {isCategory?null:
-          <Checkbox
-            checked={selectedIds.includes(item.id)}
-            onCheckedChange={(e) => toggleSelection(item.id, isCategory, e, item.items,)}
-            className="mr-1"
-            key={item.id}
-          />} */}
-
-          {/* Icon */}
-          {isCategory ? (
-            <Folder className="w-4 h-4 text-primary" />
-          ) : (
-            <Package className="w-4 h-4 text-accent" />
-          )}
-
-          {/* Name of category or item */}
+          <Folder className="w-4 h-4 text-primary" />
           <span
             className="flex-1 text-sm"
             onClick={() => hasChildren && toggleExpand(item.id)}
@@ -99,17 +78,17 @@ export function InventoryTreePicker({
           </span>
         </div>
 
-        {/* Render Children (Sub-items or sub-categories) */}
-        {hasChildren && isExpanded && item.items && (
+        {/* Render children categories and items */}
+        {isExpanded && (
           <div>
-            {item.items.map((child) => renderSubItem(child, depth + 1, item.id))}
+            {item.children?.map((child) => renderItemCategory(child, depth + 1))}
+            {item.items?.map((child) => renderSubItem(child, depth + 1, item.id))}
           </div>
         )}
       </div>
     );
   };
   const renderSubItem = (subItem: Item, depth: number = 0, id: number) => {
-    const isSelected = selectedIds.includes(subItem.id);
 
     return (
       <div key={subItem.id}>
@@ -129,14 +108,7 @@ export function InventoryTreePicker({
           {/* Icon */}
 
           <Package className="w-4 h-4 text-accent" />
-          {/* Name of category or subItem */}
-          <span
-            className="flex-1 text-sm"
-            onClick={() => toggleExpand(subItem.id)}
-          >
-            {subItem.name}
-          </span>
-
+          <span className="flex-1 text-sm">{subItem.name}</span>
         </div>
       </div>
     );
@@ -144,7 +116,13 @@ export function InventoryTreePicker({
 
   return (
     <div className="border border-border rounded-md max-h-96 overflow-y-auto">
-      {inventory.map((item) => renderItemCategory(item, 0))}
+      {inventory && inventory.length > 0 ? (
+        inventory.map((item) => renderItemCategory(item, 0))
+      ) : (
+        <div className="text-sm text-muted-foreground text-center py-4 border border-border rounded-md">
+          No inventory available
+        </div>
+      )}
     </div>
   );
 }

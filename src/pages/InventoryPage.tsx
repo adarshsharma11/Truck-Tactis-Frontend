@@ -138,6 +138,63 @@ export default function InventoryPage() {
     await deleteCategory.mutate(id)
     refetch()
   }
+
+  // ---- Inventory category expand state ----
+  const [expandedIds, setExpandedIds] = useState<number[]>([]);
+  const toggleExpand = (id: number) => {
+    setExpandedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  // ---- Recursive category rendering ----
+  const renderCategory = (cat: any, depth = 0) => {
+    const isExpanded = expandedIds.includes(cat.id);
+    return (
+      <div key={cat.id} className="pl-1">
+        {/* Category Header */}
+        <div
+          className="flex items-center gap-2 py-2 px-2 hover:bg-muted/50 rounded-md cursor-pointer"
+          style={{ paddingLeft: `${depth * 16}px` }}
+          onClick={() => toggleExpand(cat.id)}
+        >
+          {cat.children.length > 0 || cat.items.length > 0 ? (
+            <span className="w-4">{isExpanded ? '▾' : '▸'}</span>
+          ) : (
+            <span className="w-4" />
+          )}
+           <span className="text-sm font-medium">{cat.name}</span>
+        </div>
+
+        {/* Items */}
+        {isExpanded && cat.items.length > 0 && (
+          <div className="space-y-2">
+            {cat.items.map((item: any) => (
+              <div
+                key={item.id}
+                className="p-4 border border-border rounded-md hover:bg-muted/20"
+                style={{ paddingLeft: `${(depth + 1) * 16}px` }}
+              >
+              <div className="items-center justify-between">
+                  <p className="font-medium">{item.name}</p>
+                    {item.sku && <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>}
+                    {item.weightLbs && <p className="text-xs text-muted-foreground">Weight: {item.weightLbs} lbs</p>}
+                  </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Subcategories */}
+        {isExpanded && cat.children.length > 0 && (
+          <div className="space-y-2">
+            {cat.children.map((child: any) => renderCategory(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Inventory & Fleet</h2>
@@ -205,21 +262,7 @@ export default function InventoryPage() {
                 <div className="text-center py-8 text-muted-foreground">No items yet</div>
               ) : (
                 <div className="space-y-2">
-                  {inventory?.data?.map((item) => (
-                    <div key={item.id} className="p-4 border border-border rounded-md hover:bg-muted/20">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          {item.sku && <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>}
-                          {item.weightLbs && <p className="text-xs text-muted-foreground">Weight: {item.weightLbs} lbs</p>}
-                        </div>
-                        {/* {item.is_favorited && <span className="text-warning">⭐</span>} */}
-                      </div>
-                      {item.category && (
-                        <p className="text-xs text-muted-foreground mt-2">{item.name} sub-items</p>
-                      )}
-                    </div>
-                  ))}
+                  {inventory.data.map((cat) => renderCategory(cat))}
                 </div>
               )}
             </Card>

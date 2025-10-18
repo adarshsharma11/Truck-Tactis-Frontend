@@ -102,21 +102,14 @@ export default function PlanPage() {
       toast.error('Please fill in address');
       return;
     }
-    else if (earliest === "") {
-      toast.error('Please fill in Earliest (time)');
-      return;
-    }
-    else if (latest === "") {
-      toast.error('Please fill in Latest (time)');
-      return;
-    }
-
 
     // // Save location with detailed address
     addLocation({
       ...location
     });
     const today = new Date().toISOString().split('T')[0];
+    const defaultEarliest = earliest || "07:00";
+    const defaultLatest = latest || "17:00";
     // Create job
     createJob.mutate({
       title: title,
@@ -129,8 +122,8 @@ export default function PlanPage() {
       items: selectedItems,
       // locationId: null,
       location: location,
-      earliestTime: new Date(`${today}T${earliest}:00`).toString() || "",
-      latestTime: new Date(`${today}T${latest}:00`).toString() || "",
+      earliestTime: new Date(`${today}T${defaultEarliest}:00`).toString(),
+      latestTime: new Date(`${today}T${defaultLatest}:00`).toString(),
       serviceMinutes: serviceMinutes ? parseInt(serviceMinutes) : null,
       curfewFlag: curfewFlag,
       // date: selectedDate,
