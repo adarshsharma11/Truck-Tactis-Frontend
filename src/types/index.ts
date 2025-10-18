@@ -67,6 +67,7 @@ export interface Category {
   createdAt: string;
   updatedAt: string;
   items: Item[];
+  children: Category[];
 }
 
 // Main Response Interface
